@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.toast
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Environment / Credentials (VERY IMPORTANT to prevent leaking keys/passwords)
+.env
+.env.*
+!.env.example
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
+
+# OS / Systems
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker / Local Volumes
+postgres_data/
+pgdata/
+redis_data/
+
+# MLflow / Local Runs
+mlruns/
+mlflow.db
+query-logs/
