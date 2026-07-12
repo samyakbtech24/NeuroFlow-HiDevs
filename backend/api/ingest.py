@@ -1,0 +1,163 @@
+import base64
+import hashlib
+import json
+import logging
+import uuid
+from typing import Optional
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
+import redis.asyncio as aioredis
+
+from backend.db.pool import get_pool
+from backend.config import settings
+
+logger = logging.getLogger("ingest-api")
+router = APIRouter()
+
+@router.post("/ingest")
+async def ingest_document(
+    request: Request,
+    file: Optional[UploadFile] = File(None),
+    url: Optional[str] = Form(None)
+):
+    """
+    Accepts multipart/form-data with file or JSON with url.
+    Checks deduplication, inserts queued document record, and enqueues job in Redis.
+    """
+    # 1. Check if request is JSON body containing url
+    if not file and not url:
+        try:
+            body = await request.json()
+            url = body.get("url")
+        except Exception:
+            pass
+
+    if not file and not url:
+        raise HTTPException(status_code=400, detail="Either file or url must be provided.")
+
+    file_bytes = b""
+    filename = ""
+    source_type = ""
+
+    if file:
+        file_bytes = await file.read()
+        if len(file_bytes) > 100 * 1024 * 1024:  # 100MB limit
+            raise HTTPException(status_code=413, detail="File too large (Max 100MB).")
+        filename = file.filename or "uploaded_file"
+        
+        # Determine source_type from extension
+        ext = filename.split(".")[-1].lower() if "." in filename else ""
+        if ext == "pdf":
+            source_type = "pdf"
+        elif ext == "docx":
+            source_type = "docx"
+        elif ext in ("jpg", "jpeg", "png", "webp"):
+            source_type = "image"
+        elif ext == "csv":
+            source_type = "csv"
+        else:
+            source_type = "text"
+    else:
+        filename = url
+        source_type = "url"
+        file_bytes = url.encode("utf-8")
+
+    # 2. Compute SHA-256 content hash
+    content_hash = hashlib.sha256(file_bytes).hexdigest()
+
+    # 3. Deduplication Check
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        existing = await conn.fetchrow(
+            "SELECT id, status FROM documents WHERE content_hash = $1",
+            content_hash
+        )
+        if existing:
+            logger.info(f"Duplicate document found with ID: {existing['id']}")
+            return {
+                "document_id": str(existing["id"]),
+                "status": existing["status"],
+                "duplicate": True
+            }
+
+    # 4. Insert queued document and enqueue task
+    doc_id = str(uuid.uuid4())
+    
+    # Store file content base64 encoded in metadata to make it shared-accessible
+    metadata = {}
+    if file:
+        metadata = {
+            "file_content_base64": base64.b64encode(file_bytes).decode("utf-8"),
+            "filename": filename
+        }
+    else:
+        metadata = {
+            "url": url
+        }
+
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            INSERT INTO documents (id, filename, source_type, content_hash, metadata, status, created_at)
+            VALUES ($1, $2, $3, $4, $5, 'queued', NOW())
+            """,
+            uuid.UUID(doc_id),
+            filename,
+            source_type,
+            content_hash,
+            json.dumps(metadata)
+        )
+
+    # Push job details to Redis queue
+    try:
+        redis_client = aioredis.from_url(settings.redis_url, socket_timeout=2.0)
+        payload = {
+            "document_id": doc_id,
+            "file_path": filename,
+            "source_type": source_type
+        }
+        await redis_client.lpush("queue:ingest", json.dumps(payload))
+        await redis_client.aclose()
+        logger.info(f"Enqueued document {doc_id} to Redis 'queue:ingest'")
+    except Exception as e:
+        logger.error(f"Failed to enqueue to Redis: {e}")
+        async with pool.acquire() as conn:
+            await conn.execute("UPDATE documents SET status = 'failed' WHERE id = $1", uuid.UUID(doc_id))
+        raise HTTPException(status_code=500, detail="Failed to enqueue ingestion task.")
+
+    return {
+        "document_id": doc_id,
+        "status": "queued",
+        "duplicate": False
+    }
+
+@router.get("/documents/{document_id}")
+async def get_document_status(document_id: str):
+    """
+    Returns document status, chunk count, and metadata.
+    """
+    try:
+        doc_uuid = uuid.UUID(document_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid document UUID format.")
+
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        doc = await conn.fetchrow(
+            "SELECT id, filename, source_type, status, chunk_count, metadata FROM documents WHERE id = $1",
+            doc_uuid
+        )
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found.")
+            
+        metadata_clean = json.loads(doc["metadata"]) if doc["metadata"] else {}
+        # Remove base64 content to keep return payload clean
+        metadata_clean.pop("file_content_base64", None)
+        
+        return {
+            "document_id": str(doc["id"]),
+            "filename": doc["filename"],
+            "source_type": doc["source_type"],
+            "status": doc["status"],
+            "chunk_count": doc["chunk_count"],
+            "metadata": metadata_clean
+        }

@@ -7,6 +7,7 @@ from backend.config import settings
 from backend.db.pool import init_pool, close_pool
 from backend.db.migrations import ensure_mlflow_db, apply_migrations
 from backend.db.health import check_postgres, check_redis, check_mlflow
+from backend.api.ingest import router as ingest_router
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)
@@ -79,6 +80,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Register Ingestion API endpoints
+app.include_router(ingest_router)
 
 @app.get("/health")
 async def health(response: Response):

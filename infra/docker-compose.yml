@@ -26,13 +26,17 @@ services:
     depends_on: [ postgres ]
 
   api:
-    build: ../backend
+    build:
+      context: ../
+      dockerfile: backend/Dockerfile
     ports: [ "8000:8000" ]
     depends_on: [ postgres, redis, mlflow ]
     env_file: ../.env
 
   worker:
-    build: ../backend
+    build:
+      context: ../
+      dockerfile: backend/Dockerfile
     command: python -m worker
     depends_on: [ postgres, redis ]
     env_file: ../.env
