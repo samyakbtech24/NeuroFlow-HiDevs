@@ -2,20 +2,23 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies (build-essential for C extensions like asyncpg)
+# Install system dependencies (build-essential for C extensions, tesseract for OCR)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
+    tesseract-ocr \
+    libtesseract-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy and install python dependencies
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all backend code into /app/backend to preserve the package structure
-COPY . ./backend
+# Copy backend and pipelines code
+COPY backend ./backend
+COPY pipelines ./pipelines
 
-# Configure PYTHONPATH so the 'backend' package is discoverable
+# Configure PYTHONPATH so the packages are discoverable
 ENV PYTHONPATH=/app
 
 # Create a wrapper script in the root /app to route 'python -m worker' to the package
