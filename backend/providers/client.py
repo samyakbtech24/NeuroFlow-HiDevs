@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from typing import List, Optional
+from typing import List, Optional, AsyncGenerator
 import redis.asyncio as aioredis
 
 from backend.config import settings
@@ -118,6 +118,22 @@ class NeuroFlowClient:
         await self._track_metrics(model_id, result.cost_usd)
         
         return result
+
+    async def stream(self, messages: List[ChatMessage], routing_criteria: RoutingCriteria) -> AsyncGenerator[str, None]:
+        """
+        Routes the stream request to the best model and returns its token generator stream.
+        """
+        # 1. Select provider and model using routing rules
+        model_config = await self.router.route(routing_criteria)
+        provider_name = model_config["provider"]
+        model_id = model_config["model_id"]
+        
+        # 2. Retrieve appropriate provider instance
+        provider = self._get_provider(provider_name, model_id)
+        
+        # 3. Stream tokens
+        async for token in provider.stream(messages):
+            yield token
 
     async def embed(self, texts: List[str]) -> List[List[float]]:
         """
