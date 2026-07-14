@@ -74,12 +74,44 @@ async def ensure_evaluations_metadata_column() -> None:
     except Exception as e:
         logger.error(f"Error ensuring evaluations metadata column: {e}")
 
+async def ensure_pipeline_versioning_schema() -> None:
+    """
+    Dynamically applies additive schema changes for Task 8: Named Pipeline System.
+    Adds version/status to pipelines, creates pipeline_versions, and updates pipeline_runs.
+    """
+    pool = get_pool()
+    try:
+        async with pool.acquire() as conn:
+            # 1. Add version and status to pipelines
+            await conn.execute("ALTER TABLE pipelines ADD COLUMN IF NOT EXISTS version INT NOT NULL DEFAULT 1")
+            await conn.execute("ALTER TABLE pipelines ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active'")
+            
+            # 2. Create pipeline_versions for immutable audit trail
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS pipeline_versions (
+                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                    pipeline_id UUID NOT NULL REFERENCES pipelines(id) ON DELETE CASCADE,
+                    version INT NOT NULL,
+                    config JSONB NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    UNIQUE(pipeline_id, version)
+                )
+            """)
+            
+            # 3. Add pipeline_version to pipeline_runs
+            await conn.execute("ALTER TABLE pipeline_runs ADD COLUMN IF NOT EXISTS pipeline_version INT")
+            
+            logger.info("Ensured pipeline versioning schema is applied.")
+    except Exception as e:
+        logger.error(f"Error ensuring pipeline versioning schema: {e}")
+
 async def apply_migrations(schema_path: str = "../infra/init/001_schema.sql") -> None:
     """
     Applies the schema file if tables do not exist, and runs schema updates.
     """
-    # Always run the evaluations metadata column addition on startup
+    # Always run the dynamic schema additions on startup
     await ensure_evaluations_metadata_column()
+    await ensure_pipeline_versioning_schema()
     if await check_schema_applied():
         logger.info("Database schema is already applied. Skipping migrations.")
         return

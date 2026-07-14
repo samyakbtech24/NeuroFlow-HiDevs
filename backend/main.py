@@ -9,6 +9,8 @@ from backend.db.migrations import ensure_mlflow_db, apply_migrations
 from backend.db.health import check_postgres, check_redis, check_mlflow
 from backend.api.ingest import router as ingest_router
 from backend.api.query import router as query_router
+from backend.api.pipelines import router as pipelines_router
+from backend.api.compare import router as compare_router
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)
@@ -87,6 +89,10 @@ app.include_router(ingest_router)
 
 # Register Query API endpoints
 app.include_router(query_router)
+
+# Register Pipeline System endpoints
+app.include_router(pipelines_router)
+app.include_router(compare_router)
 
 @app.get("/health")
 async def health(response: Response):
