@@ -54,10 +54,10 @@ class OpenAIProvider(BaseLLMProvider):
                 if attempt == 3:
                     raise e
                 
-                # Default exponential backoff (2s, 4s, 8s)
-                retry_after = 2 ** (attempt + 1)
+                # Exponential backoff: 15s, 30s, 60s — respects free tier 60s cooldown
+                retry_after = 15 * (2 ** attempt)
                 
-                # If retry-after header is available, use it instead
+                # If retry-after header is available, use it instead (more precise)
                 if hasattr(e, "response") and e.response is not None:
                     headers = e.response.headers
                     if "retry-after" in headers:
@@ -66,7 +66,7 @@ class OpenAIProvider(BaseLLMProvider):
                         except ValueError:
                             pass
                 
-                logger.warning(f"OpenAI rate limit hit. Retrying in {retry_after} seconds... (Attempt {attempt + 1}/3)")
+                logger.warning(f"Rate limit hit. Retrying in {retry_after:.0f}s... (Attempt {attempt + 1}/3)")
                 await asyncio.sleep(retry_after)
 
     async def complete(self, messages: List[ChatMessage], **kwargs) -> GenerationResult:
