@@ -212,3 +212,82 @@ async def query_stream(run_id: uuid.UUID, request: Request):
 
     # EventSourceResponse automatically sends comment keepalives (ping=15 seconds) to prevent proxy timeouts.
     return EventSourceResponse(event_generator(), ping=15)
+
+class RatingRequest(BaseModel):
+    """
+    Schema for updating human feedback rating.
+    """
+    rating: int = Field(..., ge=1, le=5, description="Human score between 1 and 5")
+
+@router.patch("/runs/{run_id}/rating")
+async def update_run_rating(run_id: uuid.UUID, body: RatingRequest):
+    """
+    Saves human rating feedback, compares it to automated overall score,
+    and flags calibration needs in JSONB metadata.
+    """
+    pool = get_pool()
+    try:
+        async with pool.acquire() as conn:
+            # 1. Verify pipeline run exists
+            run_exists = await conn.fetchval("SELECT 1 FROM pipeline_runs WHERE id = $1", run_id)
+            if not run_exists:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Pipeline run execution not found."
+                )
+
+            # 2. Check if automated evaluation row already exists
+            row = await conn.fetchrow(
+                "SELECT overall_score, metadata FROM evaluations WHERE run_id = $1", 
+                run_id
+            )
+            
+            user_score = body.rating / 5.0
+            calibration_needed = False
+            
+            if row:
+                overall_score = row["overall_score"]
+                if overall_score is not None:
+                    if abs(overall_score - user_score) > 0.3:
+                        calibration_needed = True
+                
+                # Retrieve existing metadata dict
+                try:
+                    metadata = json.loads(row["metadata"]) if row["metadata"] else {}
+                except Exception:
+                    metadata = {}
+                metadata["calibration_needed"] = calibration_needed
+                
+                await conn.execute(
+                    "UPDATE evaluations SET user_rating = $1, metadata = $2::jsonb WHERE run_id = $3",
+                    body.rating,
+                    json.dumps(metadata),
+                    run_id
+                )
+            else:
+                # No automated evaluations completed yet: save user rating and insert placeholder
+                await conn.execute(
+                    """
+                    INSERT INTO evaluations (id, run_id, user_rating, metadata, evaluated_at)
+                    VALUES ($1, $2, $3, $4::jsonb, NOW())
+                    """,
+                    uuid.uuid4(),
+                    run_id,
+                    body.rating,
+                    json.dumps({"calibration_needed": False})
+                )
+                
+            return {
+                "status": "success",
+                "message": "User feedback rating recorded successfully.",
+                "calibration_needed": calibration_needed
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to record rating for run {run_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to record human feedback: {str(e)}"
+        )
+

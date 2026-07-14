@@ -59,10 +59,27 @@ async def check_schema_applied() -> bool:
         logger.error(f"Error checking if schema is applied: {e}")
         return False
 
+async def ensure_evaluations_metadata_column() -> None:
+    """
+    Dynamically ensures the 'metadata' JSONB column exists in the 'evaluations' table
+    to store human feedback calibration flagging.
+    """
+    pool = get_pool()
+    try:
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'"
+            )
+            logger.info("Ensured 'metadata' column exists in 'evaluations' table.")
+    except Exception as e:
+        logger.error(f"Error ensuring evaluations metadata column: {e}")
+
 async def apply_migrations(schema_path: str = "../infra/init/001_schema.sql") -> None:
     """
-    Applies the schema file if tables do not exist.
+    Applies the schema file if tables do not exist, and runs schema updates.
     """
+    # Always run the evaluations metadata column addition on startup
+    await ensure_evaluations_metadata_column()
     if await check_schema_applied():
         logger.info("Database schema is already applied. Skipping migrations.")
         return
