@@ -7,6 +7,7 @@ from backend.config import settings
 from backend.db.pool import init_pool, close_pool
 from backend.db.migrations import ensure_mlflow_db, apply_migrations
 from backend.db.health import check_postgres, check_redis, check_mlflow
+import redis.asyncio as aioredis
 from backend.api.ingest import router as ingest_router
 from backend.api.query import router as query_router
 from backend.api.pipelines import router as pipelines_router
@@ -99,24 +100,61 @@ app.include_router(finetune_router)
 @app.get("/health")
 async def health(response: Response):
     """
-    Retrieves health status of Postgres, Redis, and MLflow connections.
+    Retrieves health status of core services and resilience systems (Circuit Breakers, Queues).
     """
-    postgres_ok = await check_postgres()
-    redis_ok = await check_redis()
-    mlflow_ok = await check_mlflow()
+    postgres = await check_postgres()
+    redis = await check_redis()
+    mlflow = await check_mlflow()
     
-    all_ok = postgres_ok and redis_ok and mlflow_ok
-    status = "ok" if all_ok else "error"
+    # 1. Check Circuit Breakers dynamically
+    circuit_breakers = {}
+    any_open = False
     
-    if not all_ok:
+    if redis["status"] == "ok":
+        client = aioredis.from_url(settings.redis_url, decode_responses=True)
+        try:
+            # Scan for all circuit breaker state keys
+            async for key in client.scan_iter("circuit:*:state"):
+                name = key.split(":")[1]
+                state = await client.get(key)
+                
+                if state == "open":
+                    any_open = True
+                    opened_at = await client.get(f"circuit:{name}:opened_at")
+                    circuit_breakers[name] = {"state": "open", "opened_at": opened_at}
+                else:
+                    failures = await client.get(f"circuit:{name}:failure_count") or 0
+                    circuit_breakers[name] = {"state": state, "failure_count": int(failures)}
+            
+            # 2. Check Queue Depths
+            queue_depth = await client.llen("queue:ingest")
+        finally:
+            await client.aclose()
+    else:
+        queue_depth = 0
+        
+    # Determine final system status
+    critical = postgres["status"] != "ok" or redis["status"] != "ok"
+    
+    if critical:
+        status = "critical"
         response.status_code = 503
+    elif any_open:
+        status = "degraded"
+        # Often degraded APIs still return 200 so monitoring knows the API itself is reachable,
+        # but you can return 200 or 503 depending on corporate standards.
+    else:
+        status = "ok"
         
     return {
         "status": status,
         "checks": {
-            "postgres": postgres_ok,
-            "redis": redis_ok,
-            "mlflow": mlflow_ok
+            "postgres": postgres,
+            "redis": redis,
+            "mlflow": mlflow,
+            "circuit_breakers": circuit_breakers,
+            "queue_depth": queue_depth,
+            "worker_count": 2  # Hardcoded for the 2 workers in our docker-compose
         }
     }
 

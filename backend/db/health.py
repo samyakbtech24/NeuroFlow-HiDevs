@@ -1,3 +1,4 @@
+import time
 import logging
 import asyncpg
 import redis.asyncio as aioredis
@@ -7,52 +8,58 @@ from backend.config import settings
 
 logger = logging.getLogger(__name__)
 
-async def check_postgres() -> bool:
+async def check_postgres() -> dict:
     """
-    Verifies database connection by checking if the pool is active
-    and successfully executing a simple query ('SELECT 1').
+    Verifies database connection and returns status with latency.
     """
+    start = time.time()
     try:
         pool = get_pool()
         async with pool.acquire() as conn:
             val = await conn.fetchval("SELECT 1")
-            return val == 1
+            if val == 1:
+                latency = int((time.time() - start) * 1000)
+                return {"status": "ok", "latency_ms": latency}
+            return {"status": "error"}
     except Exception as e:
         logger.error(f"Postgres health check failed: {e}")
-        return False
+        return {"status": "error"}
 
-async def check_redis() -> bool:
+async def check_redis() -> dict:
     """
-    Verifies Redis connection by creating a temporary connection client,
-    pinging the server, and verifying the pong response.
+    Verifies Redis connection and returns status with latency.
     """
+    start = time.time()
     client = None
     try:
         client = aioredis.from_url(settings.redis_url, socket_timeout=2.0)
         pong = await client.ping()
-        return pong is True
+        if pong is True:
+            latency = int((time.time() - start) * 1000)
+            return {"status": "ok", "latency_ms": latency}
+        return {"status": "error"}
     except Exception as e:
         logger.error(f"Redis health check failed: {e}")
-        return False
+        return {"status": "error"}
     finally:
         if client is not None:
             await client.aclose()
 
-async def check_mlflow() -> bool:
+async def check_mlflow() -> dict:
     """
-    Verifies MLflow service connection by making an HTTP GET request
-    to the configured MLflow tracking URI.
+    Verifies MLflow service connection and returns status with latency.
     """
+    start = time.time()
     try:
         async with httpx.AsyncClient(timeout=2.0) as client:
-            # Send Host: localhost to satisfy MLflow security filters
             response = await client.get(
                 f"{settings.mlflow_tracking_uri}/", 
                 headers={"Host": "localhost"}
             )
-            # Status < 500 confirms the server is reachable and active
-            return response.status_code < 500
+            if response.status_code < 500:
+                latency = int((time.time() - start) * 1000)
+                return {"status": "ok", "latency_ms": latency}
+            return {"status": "error"}
     except Exception as e:
         logger.error(f"MLflow health check failed: {e}")
-        return False
-
+        return {"status": "error"}

@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
 from backend.db.pool import get_pool
+from backend.resilience.rate_limiter import rate_limiter
 from pipelines.retrieval.retriever import Retriever
 from pipelines.retrieval.context_assembler import assemble_context
 from pipelines.generation.generator import RAGGenerator
@@ -33,33 +34,49 @@ class QueryResponse(BaseModel):
     citations: List[dict]
 
 @router.post("/query")
-async def create_query(request: QueryRequest):
+async def create_query(http_request: Request, request: QueryRequest):
     """
     Initializes a query execution run:
     1. Creates a new run_id.
     2. Logs the run record into the pipeline_runs table as 'running'.
     3. Returns run_id immediately if stream=True, else executes the RAG pipeline blocking.
     """
+    # 0. API Rate Limiting (60 requests per minute per IP)
+    client_ip = http_request.client.host if http_request.client else "unknown"
+    await rate_limiter.check_sliding_window(f"query_api:{client_ip}", limit=60, window_seconds=60)
+    
     run_id = uuid.uuid4()
     pool = get_pool()
     
-    # Verify pipeline exists first
+    # Verify pipeline exists and enforce per-pipeline rate limits
     try:
         async with pool.acquire() as conn:
-            pipeline_exists = await conn.fetchval("SELECT 1 FROM pipelines WHERE id = $1", request.pipeline_id)
-            if not pipeline_exists:
-                # If pipeline doesn't exist, seed a dummy pipeline config so the execution doesn't block
-                # in case the UI testing hasn't initialized the pipeline table yet.
+            pipeline_row = await conn.fetchrow("SELECT config FROM pipelines WHERE id = $1", request.pipeline_id)
+            if not pipeline_row:
+                # Seed dummy if missing for UI compatibility
+                dummy_config = {"model": "gpt-4o-mini", "temperature": 0.0, "rate_limit_rpm": 60}
                 await conn.execute(
-                    """
-                    INSERT INTO pipelines (id, name, config, created_at)
-                    VALUES ($1, $2, $3::jsonb, NOW())
-                    ON CONFLICT DO NOTHING
-                    """,
-                    request.pipeline_id,
-                    f"Pipeline-{request.pipeline_id}",
-                    json.dumps({"model": "gpt-4o-mini", "temperature": 0.0})
+                    "INSERT INTO pipelines (id, name, config, created_at) VALUES ($1, $2, $3::jsonb, NOW()) ON CONFLICT DO NOTHING",
+                    request.pipeline_id, f"Pipeline-{request.pipeline_id}", json.dumps(dummy_config)
                 )
+                pipeline_row = {"config": json.dumps(dummy_config)}
+                
+            if pipeline_row and pipeline_row["config"]:
+                config = json.loads(pipeline_row["config"])
+                rpm = config.get("rate_limit_rpm")
+                if rpm:
+                    from backend.resilience.rate_limiter import RateLimitExceeded
+                    try:
+                        await rate_limiter.check_token_bucket(
+                            f"pipeline:{request.pipeline_id}",
+                            max_tokens=rpm,
+                            refill_rate_per_sec=rpm / 60.0
+                        )
+                    except RateLimitExceeded as rle:
+                        raise HTTPException(status_code=429, detail="Pipeline Rate Limit Exceeded", headers={"Retry-After": str(rle.retry_after)})
+                        
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Pipeline verification check failed: {e}")
 
