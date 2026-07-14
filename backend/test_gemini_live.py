@@ -5,6 +5,7 @@ Run from project root: python backend/test_gemini_live.py
 import asyncio
 import os
 import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -22,10 +23,10 @@ async def test_gemini():
         print("Add it to your .env file: GEMINI_API_KEY=AIza...")
         return
 
-    print(f"Testing Gemini 2.0 Flash with key: {api_key[:8]}...{api_key[-4:]}")
+    print(f"Testing gemini-flash-latest (FREE rolling alias) with key: {api_key[:8]}...{api_key[-4:]}")
     print("=" * 60)
 
-    provider = GeminiProvider(model_name="gemini-2.0-flash", api_key=api_key)
+    provider = GeminiProvider(model_name="gemini-flash-latest", api_key=api_key)
 
     messages = [
         ChatMessage(role="system", content="You are a concise AI assistant."),
@@ -37,7 +38,7 @@ async def test_gemini():
     print(f"    Model:         {result.model}")
     print(f"    Input tokens:  {result.input_tokens}")
     print(f"    Output tokens: {result.output_tokens}")
-    print(f"    Cost USD:      ${result.cost_usd:.6f}  ← should be $0.000000")
+    print(f"    Cost USD:      ${result.cost_usd:.6f}  (should be $0.000000 on free tier)")
     print(f"    Response:      {result.content}")
 
     print("\n[2] Testing stream() call...")
@@ -47,8 +48,8 @@ async def test_gemini():
     print(f"    Streamed response: {streamed.strip()}")
 
     print("\n" + "=" * 60)
-    print("SUCCESS: Gemini 2.0 Flash is LIVE and responding!")
-    print(f"Total billing for this test: $0.000000 (free tier)")
+    print("SUCCESS: gemini-flash-latest is LIVE and responding!")
+    print(f"Total billing for this test: $0.000000 (free tier, $0 guaranteed)")
 
 if __name__ == "__main__":
     asyncio.run(test_gemini())

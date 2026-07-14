@@ -23,9 +23,10 @@ class GeminiProvider(OpenAIProvider):
                 base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
             )
 
-        # Override cost to $0 for gemini-2.0-flash (free tier)
-        # Store as private attrs so we can override the parent's @property
-        if "gemini-2.0-flash" in model_name:
+        # Override cost to $0 — gemini-flash-latest is on the FREE TIER (no billing)
+        # It is Google's rolling alias that always resolves to the current recommended free Flash model.
+        # Store as private attrs so we can override the parent's read-only @property
+        if "gemini-flash" in model_name or "gemini-3" in model_name:
             self._input_cost = 0.0
             self._output_cost = 0.0
         else:

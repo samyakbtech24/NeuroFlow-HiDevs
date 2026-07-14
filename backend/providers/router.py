@@ -61,7 +61,7 @@ DEFAULT_MODELS = [
         "fine_tuned_for_task": None
     },
     {
-        "model_id": "gemini-2.0-flash",
+        "model_id": "gemini-flash-latest",
         "provider": "gemini",
         "input_cost_per_million": 0.0,
         "output_cost_per_million": 0.0,
