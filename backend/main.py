@@ -11,6 +11,7 @@ from backend.api.ingest import router as ingest_router
 from backend.api.query import router as query_router
 from backend.api.pipelines import router as pipelines_router
 from backend.api.compare import router as compare_router
+from backend.api.finetune import router as finetune_router
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)
@@ -93,6 +94,7 @@ app.include_router(query_router)
 # Register Pipeline System endpoints
 app.include_router(pipelines_router)
 app.include_router(compare_router)
+app.include_router(finetune_router)
 
 @app.get("/health")
 async def health(response: Response):
