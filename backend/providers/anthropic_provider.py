@@ -91,7 +91,7 @@ class AnthropicProvider(BaseLLMProvider):
         # 1. Mock Mode
         if self.is_mock:
             await asyncio.sleep(0.1)  # Simulate network latency
-            mock_content = f"Simulated complete response from Anthropic model {self.model_name}."
+            mock_content = f"Based on the provided documents [Source 1], this is a simulated complete response from Anthropic model {self.model_name}."
             
             prompt_len = sum(len(str(m.content)) for m in messages)
             input_tokens = max(1, prompt_len // 4)
@@ -151,7 +151,7 @@ class AnthropicProvider(BaseLLMProvider):
     async def stream(self, messages: List[ChatMessage], **kwargs) -> AsyncGenerator[str, None]:
         # 1. Mock Mode
         if self.is_mock:
-            mock_content = f"Simulated stream response from Anthropic model {self.model_name}."
+            mock_content = f"Based on the database records [Source 1], this is a simulated stream response from Anthropic model {self.model_name}."
             for word in mock_content.split():
                 await asyncio.sleep(0.05)  # Simulate streaming interval
                 yield word + " "

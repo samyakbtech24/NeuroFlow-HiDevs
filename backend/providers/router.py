@@ -59,6 +59,17 @@ DEFAULT_MODELS = [
         "supports_task_types": ["rag_generation", "evaluation", "embedding"],
         "is_fine_tuned": False,
         "fine_tuned_for_task": None
+    },
+    {
+        "model_id": "gemini-flash-latest",
+        "provider": "gemini",
+        "input_cost_per_million": 0.0,
+        "output_cost_per_million": 0.0,
+        "context_window": 1000000,
+        "supports_vision": True,
+        "supports_task_types": ["rag_generation", "classification", "evaluation"],
+        "is_fine_tuned": False,
+        "fine_tuned_for_task": None
     }
 ]
 

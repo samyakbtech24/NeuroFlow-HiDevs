@@ -1,0 +1,182 @@
+[
+  {
+    "query": "What is the capital of France?",
+    "context": "Paris is the capital and most populous city of France.",
+    "answer": "Paris is the capital of France.",
+    "human_score": 1.0
+  },
+  {
+    "query": "Who wrote Romeo and Juliet?",
+    "context": "Romeo and Juliet is a tragedy written by William Shakespeare early in his career.",
+    "answer": "Romeo and Juliet was written by William Shakespeare.",
+    "human_score": 1.0
+  },
+  {
+    "query": "What is the speed of light?",
+    "context": "The speed of light in a vacuum is exactly 299,792,458 meters per second.",
+    "answer": "The speed of light is 299,792,458 meters per second.",
+    "human_score": 1.0
+  },
+  {
+    "query": "Where are the Pyramids located?",
+    "context": "The Great Pyramids of Giza are located on the Giza Plateau near Cairo, Egypt.",
+    "answer": "The Great Pyramids are located in Egypt near Cairo.",
+    "human_score": 1.0
+  },
+  {
+    "query": "What is photosynthesis?",
+    "context": "Photosynthesis is the process used by plants to convert light energy into chemical energy.",
+    "answer": "Photosynthesis converts light energy into chemical energy in plants.",
+    "human_score": 1.0
+  },
+  {
+    "query": "Who painted the Mona Lisa?",
+    "context": "The Mona Lisa is a half-length portrait painting by Italian artist Leonardo da Vinci.",
+    "answer": "Leonardo da Vinci painted the Mona Lisa.",
+    "human_score": 1.0
+  },
+  {
+    "query": "What is the largest ocean?",
+    "context": "The Pacific Ocean is the largest and deepest of Earth's oceanic divisions.",
+    "answer": "The Pacific Ocean is the largest ocean on Earth.",
+    "human_score": 1.0
+  },
+  {
+    "query": "What causes tides?",
+    "context": "Tides are the rise and fall of sea levels caused by the combined effects of the gravitational forces exerted by the Moon and the Sun.",
+    "answer": "Tides are caused by the gravitational forces of the Moon and the Sun.",
+    "human_score": 1.0
+  },
+  {
+    "query": "Who discovered gravity?",
+    "context": "Sir Isaac Newton formulated the laws of motion and universal gravitation in his book Principia.",
+    "answer": "Isaac Newton formulated the universal laws of gravitation.",
+    "human_score": 1.0
+  },
+  {
+    "query": "What is the primary gas in Earth's atmosphere?",
+    "context": "Nitrogen makes up about 78% of Earth's atmosphere, followed by oxygen at 21%.",
+    "answer": "Nitrogen is the primary gas in the atmosphere.",
+    "human_score": 1.0
+  },
+  {
+    "query": "Who was the first president of the USA?",
+    "context": "George Washington served as the first president of the United States from 1789 to 1797.",
+    "answer": "George Washington was the first president of the US, though he was born in London.",
+    "human_score": 0.5
+  },
+  {
+    "query": "Where is Mount Everest?",
+    "context": "Mount Everest is Earth's highest mountain above sea level, located in the Himalayas range on the border between Nepal and China.",
+    "answer": "Mount Everest is on the border of Nepal and China, and is 9,000 meters high.",
+    "human_score": 0.5
+  },
+  {
+    "query": "What is the boiling point of water?",
+    "context": "Water boils at 100 degrees Celsius or 212 degrees Fahrenheit under standard atmospheric pressure.",
+    "answer": "Water boils at 100 degrees Celsius and freezes at minus 10 degrees.",
+    "human_score": 0.5
+  },
+  {
+    "query": "What is the currency of Japan?",
+    "context": "The Japanese yen is the official currency of Japan. It is the third most traded currency.",
+    "answer": "The currency of Japan is the yen, and it is pegged to the US dollar.",
+    "human_score": 0.5
+  },
+  {
+    "query": "Who wrote Hamlet?",
+    "context": "Hamlet is a tragedy written by William Shakespeare at an uncertain date between 1599 and 1601.",
+    "answer": "William Shakespeare wrote Hamlet, which was first performed in Rome.",
+    "human_score": 0.5
+  },
+  {
+    "query": "What is the capital of Australia?",
+    "context": "Canberra is the capital city of Australia, founded in 1913 following the federation of the colonies.",
+    "answer": "Canberra is the capital of Australia. Sydney is the largest city.",
+    "human_score": 0.5
+  },
+  {
+    "query": "How many bones are in the human body?",
+    "context": "The human skeleton consists of 206 bones in adults, starting with around 270 at birth.",
+    "answer": "Adults have 206 bones, while infants have exactly 500 bones.",
+    "human_score": 0.5
+  },
+  {
+    "query": "What is the chemical formula for salt?",
+    "context": "Sodium chloride, commonly known as salt, is an ionic compound with the chemical formula NaCl.",
+    "answer": "The formula for salt is NaCl, and it is highly flammable.",
+    "human_score": 0.5
+  },
+  {
+    "query": "Who invented the telephone?",
+    "context": "Alexander Graham Bell is widely credited with patenting the first practical telephone in 1876.",
+    "answer": "Alexander Graham Bell patented the telephone in Boston, Massachusetts.",
+    "human_score": 0.5
+  },
+  {
+    "query": "What is the largest desert?",
+    "context": "The Antarctic Desert is the largest desert on Earth, covering the continent of Antarctica.",
+    "answer": "The Antarctic Desert is the largest, and it has no ice whatsoever.",
+    "human_score": 0.5
+  },
+  {
+    "query": "What is the capital of Japan?",
+    "context": "Tokyo is the capital and largest city of Japan, known for its technology and culture.",
+    "answer": "Kyoto is the capital of Japan.",
+    "human_score": 0.0
+  },
+  {
+    "query": "What is the speed of sound?",
+    "context": "The speed of sound in dry air at 20 degrees Celsius is approximately 343 meters per second.",
+    "answer": "The speed of sound is 1000 meters per second.",
+    "human_score": 0.0
+  },
+  {
+    "query": "Who discovered electricity?",
+    "context": "Benjamin Franklin conducted experiments with kites in 1752 to prove lightning is electricity.",
+    "answer": "Thomas Edison discovered electricity in 1890.",
+    "human_score": 0.0
+  },
+  {
+    "query": "What is the capital of Canada?",
+    "context": "Ottawa is the capital of Canada, located on the south bank of the Ottawa River.",
+    "answer": "Toronto is the capital of Canada.",
+    "human_score": 0.0
+  },
+  {
+    "query": "Who was Albert Einstein?",
+    "context": "Albert Einstein was a theoretical physicist who developed the theory of relativity.",
+    "answer": "Albert Einstein was a classical musician from Vienna.",
+    "human_score": 0.0
+  },
+  {
+    "query": "What is the largest country in the world?",
+    "context": "Russia is the largest country in the world by area, covering over 17 million square kilometers.",
+    "answer": "China is the largest country in the world.",
+    "human_score": 0.0
+  },
+  {
+    "query": "What is the diameter of Earth?",
+    "context": "Earth has an equatorial diameter of approximately 12,756 kilometers.",
+    "answer": "The diameter of Earth is 50,000 kilometers.",
+    "human_score": 0.0
+  },
+  {
+    "query": "Who built the Eiffel Tower?",
+    "context": "The Eiffel Tower was designed by Gustave Eiffel's company for the 1889 World's Fair in Paris.",
+    "answer": "The Eiffel Tower was built by Napoleon Bonaparte.",
+    "human_score": 0.0
+  },
+  {
+    "query": "What is the main ingredient of glass?",
+    "context": "Glass is made by melting silicon dioxide (silica or sand) with sodium carbonate and calcium oxide.",
+    "answer": "Glass is primarily made of liquid plastic.",
+    "human_score": 0.0
+  },
+  {
+    "query": "Who was Abraham Lincoln?",
+    "context": "Abraham Lincoln served as the 16th president of the United States during the American Civil War.",
+    "answer": "Abraham Lincoln was the first king of England.",
+    "human_score": 0.0
+  }
+]

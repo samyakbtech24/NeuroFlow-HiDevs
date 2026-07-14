@@ -1,13 +1,14 @@
 import logging
 import os
 import time
-from typing import List, Optional
+from typing import List, Optional, AsyncGenerator
 import redis.asyncio as aioredis
 
 from backend.config import settings
 from backend.providers.base import ChatMessage, GenerationResult
 from backend.providers.openai_provider import OpenAIProvider
 from backend.providers.anthropic_provider import AnthropicProvider
+from backend.providers.gemini_provider import GeminiProvider
 from backend.providers.router import ModelRouter, RoutingCriteria
 
 logger = logging.getLogger("neuroflow-client")
@@ -43,11 +44,13 @@ class NeuroFlowClient:
         # Load API keys from environment variables (fallback to "mock" for free runs)
         self.openai_key = os.getenv("OPENAI_API_KEY", "mock")
         self.anthropic_key = os.getenv("ANTHROPIC_API_KEY", "mock")
+        self.gemini_key = os.getenv("GEMINI_API_KEY", "mock")
         
         # Cache for provider instances (e.g. {"openai": {"gpt-4o-mini": <instance>}})
         self.providers = {
             "openai": {},
-            "anthropic": {}
+            "anthropic": {},
+            "gemini": {}
         }
         self._initialized = True
 
@@ -70,6 +73,14 @@ class NeuroFlowClient:
                     api_key=self.anthropic_key
                 )
             return self.providers["anthropic"][model_name]
+            
+        elif provider_name == "gemini":
+            if model_name not in self.providers["gemini"]:
+                self.providers["gemini"][model_name] = GeminiProvider(
+                    model_name=model_name,
+                    api_key=self.gemini_key
+                )
+            return self.providers["gemini"][model_name]
             
         else:
             raise ValueError(f"Unsupported provider: {provider_name}")
@@ -118,6 +129,22 @@ class NeuroFlowClient:
         await self._track_metrics(model_id, result.cost_usd)
         
         return result
+
+    async def stream(self, messages: List[ChatMessage], routing_criteria: RoutingCriteria) -> AsyncGenerator[str, None]:
+        """
+        Routes the stream request to the best model and returns its token generator stream.
+        """
+        # 1. Select provider and model using routing rules
+        model_config = await self.router.route(routing_criteria)
+        provider_name = model_config["provider"]
+        model_id = model_config["model_id"]
+        
+        # 2. Retrieve appropriate provider instance
+        provider = self._get_provider(provider_name, model_id)
+        
+        # 3. Stream tokens
+        async for token in provider.stream(messages):
+            yield token
 
     async def embed(self, texts: List[str]) -> List[List[float]]:
         """

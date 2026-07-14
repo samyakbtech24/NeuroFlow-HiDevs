@@ -54,10 +54,10 @@ class OpenAIProvider(BaseLLMProvider):
                 if attempt == 3:
                     raise e
                 
-                # Default exponential backoff (2s, 4s, 8s)
-                retry_after = 2 ** (attempt + 1)
+                # Exponential backoff: 15s, 30s, 60s — respects free tier 60s cooldown
+                retry_after = 15 * (2 ** attempt)
                 
-                # If retry-after header is available, use it instead
+                # If retry-after header is available, use it instead (more precise)
                 if hasattr(e, "response") and e.response is not None:
                     headers = e.response.headers
                     if "retry-after" in headers:
@@ -66,7 +66,7 @@ class OpenAIProvider(BaseLLMProvider):
                         except ValueError:
                             pass
                 
-                logger.warning(f"OpenAI rate limit hit. Retrying in {retry_after} seconds... (Attempt {attempt + 1}/3)")
+                logger.warning(f"Rate limit hit. Retrying in {retry_after:.0f}s... (Attempt {attempt + 1}/3)")
                 await asyncio.sleep(retry_after)
 
     async def complete(self, messages: List[ChatMessage], **kwargs) -> GenerationResult:
@@ -75,7 +75,7 @@ class OpenAIProvider(BaseLLMProvider):
         # 1. Mock Mode
         if self.is_mock:
             await asyncio.sleep(0.1)  # Simulate network latency
-            mock_content = f"Simulated complete response from OpenAI model {self.model_name}."
+            mock_content = f"Based on the provided documents [Source 1], this is a simulated complete response from OpenAI model {self.model_name}."
             
             prompt_len = sum(len(str(m.content)) for m in messages)
             input_tokens = max(1, prompt_len // 4)
@@ -120,7 +120,7 @@ class OpenAIProvider(BaseLLMProvider):
     async def stream(self, messages: List[ChatMessage], **kwargs) -> AsyncGenerator[str, None]:
         # 1. Mock Mode
         if self.is_mock:
-            mock_content = f"Simulated stream response from OpenAI model {self.model_name}."
+            mock_content = f"Based on the database records [Source 1], this is a simulated stream response from OpenAI model {self.model_name}."
             for word in mock_content.split():
                 await asyncio.sleep(0.05)  # Simulate streaming interval
                 yield word + " "
