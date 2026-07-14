@@ -10,6 +10,9 @@ from backend.providers.openai_provider import OpenAIProvider
 from backend.providers.anthropic_provider import AnthropicProvider
 from backend.providers.gemini_provider import GeminiProvider
 from backend.providers.router import ModelRouter, RoutingCriteria
+from backend.resilience.circuit_breaker import CircuitBreaker
+from backend.resilience.rate_limiter import rate_limiter
+from backend.resilience.timeout_manager import timeout_manager
 
 logger = logging.getLogger("neuroflow-client")
 
@@ -111,19 +114,33 @@ class NeuroFlowClient:
         # 2. Retrieve appropriate provider instance
         provider = self._get_provider(provider_name, model_id)
         
-        # 3. Call model with OpenTelemetry tracing if available
-        if tracer:
-            with tracer.start_as_current_span("neuroflow_chat") as span:
-                span.set_attribute("model", model_id)
-                
-                result = await provider.complete(messages)
-                
-                span.set_attribute("input_tokens", result.input_tokens)
-                span.set_attribute("output_tokens", result.output_tokens)
-                span.set_attribute("cost_usd", result.cost_usd)
-                span.set_attribute("latency_ms", result.latency_ms)
-        else:
-            result = await provider.complete(messages)
+        # 3. Apply Resilience Layers (Rate Limiting, Circuit Breaker, Timeouts)
+        
+        # Check Token Bucket Limits (NeuroFlow global rate limit)
+        if provider_name == "openai":
+            await rate_limiter.check_token_bucket("openai", max_tokens=3000, refill_rate_per_sec=50.0)
+        elif provider_name == "anthropic":
+            await rate_limiter.check_token_bucket("anthropic", max_tokens=1000, refill_rate_per_sec=20.0)
+        
+        task_type = routing_criteria.task_type
+        if task_type == "rag_generation":
+            task_type = "chat_completion"  # Map to our standard timeout dictionary key
+            
+        async with CircuitBreaker(provider_name):
+            coro = provider.complete(messages)
+            
+            if tracer:
+                with tracer.start_as_current_span("neuroflow_chat") as span:
+                    span.set_attribute("model", model_id)
+                    
+                    result = await timeout_manager.run_with_timeout(task_type, coro)
+                    
+                    span.set_attribute("input_tokens", result.input_tokens)
+                    span.set_attribute("output_tokens", result.output_tokens)
+                    span.set_attribute("cost_usd", result.cost_usd)
+                    span.set_attribute("latency_ms", result.latency_ms)
+            else:
+                result = await timeout_manager.run_with_timeout(task_type, coro)
             
         # 4. Log call statistics to Redis asynchronously
         await self._track_metrics(model_id, result.cost_usd)
@@ -142,9 +159,15 @@ class NeuroFlowClient:
         # 2. Retrieve appropriate provider instance
         provider = self._get_provider(provider_name, model_id)
         
-        # 3. Stream tokens
-        async for token in provider.stream(messages):
-            yield token
+        # 3. Apply Resilience Layers
+        if provider_name == "openai":
+            await rate_limiter.check_token_bucket("openai", max_tokens=3000, refill_rate_per_sec=50.0)
+        elif provider_name == "anthropic":
+            await rate_limiter.check_token_bucket("anthropic", max_tokens=1000, refill_rate_per_sec=20.0)
+            
+        async with CircuitBreaker(provider_name):
+            async for token in provider.stream(messages):
+                yield token
 
     async def embed(self, texts: List[str]) -> List[List[float]]:
         """
@@ -160,19 +183,25 @@ class NeuroFlowClient:
         provider = self._get_provider(provider_name, model_id)
         
         start_time = time.time()
-        # 3. Get embeddings with OpenTelemetry tracing if available
-        if tracer:
-            with tracer.start_as_current_span("neuroflow_embed") as span:
-                span.set_attribute("model", model_id)
-                span.set_attribute("text_count", len(texts))
-                
-                embeddings = await provider.embed(texts)
-                
-                latency_ms = (time.time() - start_time) * 1000
-                span.set_attribute("latency_ms", latency_ms)
-        else:
-            embeddings = await provider.embed(texts)
-            latency_ms = (time.time() - start_time) * 1000
+        
+        # 3. Apply Resilience Layers
+        if provider_name == "openai":
+            await rate_limiter.check_token_bucket("openai", max_tokens=3000, refill_rate_per_sec=50.0)
+            
+        async with CircuitBreaker(provider_name):
+            coro = provider.embed(texts)
+            
+            if tracer:
+                with tracer.start_as_current_span("neuroflow_embed") as span:
+                    span.set_attribute("model", model_id)
+                    span.set_attribute("text_count", len(texts))
+                    
+                    embeddings = await timeout_manager.run_with_timeout("embedding", coro)
+                    
+                    latency_ms = (time.time() - start_time) * 1000
+                    span.set_attribute("latency_ms", latency_ms)
+            else:
+                embeddings = await timeout_manager.run_with_timeout("embedding", coro)
             
         # 4. Estimate cost for embedding tracking
         # Assume text-embedding-3-small pricing ($0.02 per million tokens)

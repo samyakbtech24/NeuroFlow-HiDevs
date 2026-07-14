@@ -9,11 +9,13 @@ import redis.asyncio as aioredis
 
 from backend.db.pool import get_pool
 from backend.config import settings
+from backend.resilience.rate_limiter import rate_limiter
+from backend.resilience.backpressure import check_ingestion_backpressure
 
 logger = logging.getLogger("ingest-api")
 router = APIRouter()
 
-@router.post("/ingest")
+@router.post("/", status_code=202)
 async def ingest_document(
     request: Request,
     file: Optional[UploadFile] = File(None),
@@ -23,6 +25,11 @@ async def ingest_document(
     Accepts multipart/form-data with file or JSON with url.
     Checks deduplication, inserts queued document record, and enqueues job in Redis.
     """
+    # 0. Resilience Checks
+    client_ip = request.client.host if request.client else "unknown"
+    await rate_limiter.check_sliding_window(f"ingest_api:{client_ip}", limit=10, window_seconds=3600)
+    backpressure_warning = await check_ingestion_backpressure()
+
     # 1. Check if request is JSON body containing url
     if not file and not url:
         try:
@@ -124,11 +131,19 @@ async def ingest_document(
             await conn.execute("UPDATE documents SET status = 'failed' WHERE id = $1", uuid.UUID(doc_id))
         raise HTTPException(status_code=500, detail="Failed to enqueue ingestion task.")
 
-    return {
+    response_payload = {
         "document_id": doc_id,
         "status": "queued",
         "duplicate": False
     }
+    
+    # Merge backpressure warning if present
+    # We call check_ingestion_backpressure() at the start of the function, 
+    # but since python's scoping allows us to use it here, we will store its result.
+    if backpressure_warning:
+        response_payload.update(backpressure_warning)
+        
+    return response_payload
 
 @router.get("/documents/{document_id}")
 async def get_document_status(document_id: str):
