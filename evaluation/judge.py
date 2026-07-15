@@ -158,6 +158,29 @@ class EvaluationJudge:
                         json.dumps({"calibration_needed": False})
                     )
             logger.info(f"Saved automated evaluation for run {run_id}: Overall Score = {overall_score}")
+            
+            # Publish evaluation notification to Redis for SSE Feed
+            try:
+                import redis.asyncio as aioredis
+                from backend.config import settings
+                redis_client = aioredis.from_url(settings.redis_url)
+                eval_data = {
+                    "run_id": str(run_id),
+                    "pipeline_id": str(pipeline_id),
+                    "query": query[:100] + "..." if len(query) > 100 else query,
+                    "overall_score": overall_score,
+                    "metrics": {
+                        "faithfulness": faithfulness,
+                        "relevance": relevance,
+                        "precision": precision,
+                        "recall": recall
+                    }
+                }
+                await redis_client.publish("evaluations:new", json.dumps(eval_data))
+                await redis_client.aclose()
+            except Exception as e:
+                logger.error(f"Failed to publish evaluation to Redis: {e}")
+
         except Exception as e:
             logger.error(f"Failed to write evaluation record to database: {e}")
 

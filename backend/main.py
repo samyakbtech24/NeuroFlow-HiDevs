@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Response
+from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
 from backend.config import settings
@@ -13,6 +14,7 @@ from backend.api.query import router as query_router
 from backend.api.pipelines import router as pipelines_router
 from backend.api.compare import router as compare_router
 from backend.api.finetune import router as finetune_router
+from backend.api.evaluations import router as evaluations_router
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)
@@ -86,6 +88,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Register Ingestion API endpoints
 app.include_router(ingest_router)
 
@@ -96,6 +106,7 @@ app.include_router(query_router)
 app.include_router(pipelines_router)
 app.include_router(compare_router)
 app.include_router(finetune_router)
+app.include_router(evaluations_router)
 
 @app.get("/health")
 async def health(response: Response):

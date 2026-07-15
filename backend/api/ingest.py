@@ -3,7 +3,7 @@ import hashlib
 import json
 import logging
 import uuid
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
 import redis.asyncio as aioredis
 
@@ -176,3 +176,25 @@ async def get_document_status(document_id: str):
             "chunk_count": doc["chunk_count"],
             "metadata": metadata_clean
         }
+
+@router.get("", response_model=List[Dict[str, Any]])
+async def list_documents():
+    """
+    Returns a list of all ingested documents, ordered by creation date.
+    """
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT id, filename, source_type, status, chunk_count, created_at FROM documents ORDER BY created_at DESC LIMIT 100"
+        )
+        return [
+            {
+                "id": str(doc["id"]),
+                "filename": doc["filename"],
+                "source_type": doc["source_type"],
+                "status": doc["status"],
+                "chunk_count": doc["chunk_count"],
+                "created_at": str(doc["created_at"])
+            }
+            for doc in rows
+        ]
