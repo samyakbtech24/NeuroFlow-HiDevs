@@ -10,7 +10,13 @@ import redis.asyncio as aioredis
 from backend.config import settings
 from backend.db.pool import init_pool, close_pool, get_pool
 from backend.providers.client import NeuroFlowClient
-from backend.monitoring.metrics import ingestion_docs_total, queue_depth
+from backend.monitoring.metrics import (
+    ingestion_docs_total,
+    ingestion_latency,
+    queue_depth_gauge
+)
+from backend.security.prompt_injection import scan_patterns
+from backend.security.secret_detector import scan_and_redact
 from pipelines.ingestion.extractors.extracted_page import ExtractedPage
 from pipelines.ingestion.extractors.pdf_extractor import extract_pdf
 from pipelines.ingestion.extractors.docx_extractor import extract_docx
@@ -131,6 +137,21 @@ async def process_ingestion_task(task_payload: dict):
                 async with conn.transaction():
                     for idx, chunk in enumerate(chunks):
                         content = chunk["content"]
+                        
+                        # Security Scanning
+                        content, redacted = scan_and_redact(content, str(doc_id))
+                        is_injection, pattern = scan_patterns(content)
+                        
+                        chunk_meta = chunk.get("metadata", {})
+                        if is_injection:
+                            chunk_meta["prompt_injection_detected"] = True
+                            chunk_meta["pattern"] = pattern
+                        if redacted:
+                            chunk_meta["secret_redacted"] = True
+                            
+                        chunk["content"] = content
+                        chunk["metadata"] = chunk_meta
+                        
                         token_count = count_tokens(content)
                         total_tokens += token_count
                         

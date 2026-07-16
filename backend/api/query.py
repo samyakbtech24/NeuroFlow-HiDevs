@@ -11,8 +11,11 @@ from backend.db.pool import get_pool
 from backend.resilience.rate_limiter import rate_limiter
 from pipelines.retrieval.retriever import Retriever
 from pipelines.retrieval.context_assembler import assemble_context
+from pipelines.retrieval.context_assembler import assemble_context
 from pipelines.generation.generator import RAGGenerator
 from backend.monitoring.metrics import queries_total
+from backend.security.validators import sanitize_text
+from backend.security.prompt_injection import scan_patterns, detect_llm_injection
 
 logger = logging.getLogger("query-api")
 
@@ -46,6 +49,20 @@ async def create_query(http_request: Request, request: QueryRequest):
     client_ip = http_request.client.host if http_request.client else "unknown"
     await rate_limiter.check_sliding_window(f"query_api:{client_ip}", limit=60, window_seconds=60)
     
+    # Sanitize and validate query length
+    request.query = sanitize_text(request.query)
+    if len(request.query) > 5000:
+        raise HTTPException(status_code=400, detail="Query exceeds maximum length of 5000 characters.")
+        
+    # Layer 1: Pattern-based Prompt Injection Check
+    is_pattern, pattern = scan_patterns(request.query)
+    # Note: Pattern matches are flagged/logged but not hard-rejected (per requirements).
+    
+    # Layer 2: LLM-based Prompt Injection Detection
+    is_llm_injection = await detect_llm_injection(request.query)
+    if is_llm_injection:
+        raise HTTPException(status_code=400, detail={"error": "query_rejected", "reason": "potential_prompt_injection"})
+        
     run_id = uuid.uuid4()
     pool = get_pool()
     

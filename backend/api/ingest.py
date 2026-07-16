@@ -11,6 +11,7 @@ from backend.db.pool import get_pool
 from backend.config import settings
 from backend.resilience.rate_limiter import rate_limiter
 from backend.resilience.backpressure import check_ingestion_backpressure
+from backend.security.validators import validate_url, validate_file_bytes
 
 logger = logging.getLogger("ingest-api")
 router = APIRouter()
@@ -40,6 +41,9 @@ async def ingest_document(
 
     if not file and not url:
         raise HTTPException(status_code=400, detail="Either file or url must be provided.")
+        
+    if url:
+        validate_url(url)
 
     file_bytes = b""
     filename = ""
@@ -50,6 +54,9 @@ async def ingest_document(
         if len(file_bytes) > 100 * 1024 * 1024:  # 100MB limit
             raise HTTPException(status_code=413, detail="File too large (Max 100MB).")
         filename = file.filename or "uploaded_file"
+        
+        # File type security check using magic bytes
+        validate_file_bytes(file_bytes, filename, file.content_type)
         
         # Determine source_type from extension
         ext = filename.split(".")[-1].lower() if "." in filename else ""

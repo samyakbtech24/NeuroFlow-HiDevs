@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from backend.db.pool import get_pool
 from backend.models.pipeline import PipelineConfig
 import asyncpg
+from backend.security.validators import sanitize_text
 
 router = APIRouter(prefix="/pipelines", tags=["pipelines"])
 
@@ -22,6 +23,10 @@ async def create_pipeline(config: PipelineConfig):
     """
     Creates a new pipeline, validating the schema strictly.
     """
+    config.name = sanitize_text(config.name)
+    if len(config.name) > 100:
+        raise HTTPException(status_code=400, detail="Pipeline name exceeds maximum length of 100 characters.")
+        
     pool = get_pool()
     try:
         async with pool.acquire() as conn:

@@ -1,8 +1,10 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+import uuid
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.config import settings
 from backend.db.pool import init_pool, close_pool
@@ -96,17 +98,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000"
+        response.headers["Content-Security-Policy"] = "default-src 'self'"
+        response.headers["X-Request-ID"] = str(uuid.uuid4())
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Register Auth endpoints
+app.include_router(auth_router)
+
 # Register Ingestion API endpoints
-app.include_router(ingest_router)
+app.include_router(ingest_router, dependencies=[Depends(get_current_user), Depends(require_scope("ingest"))])
 
 # Register Query API endpoints
-app.include_router(query_router)
+app.include_router(query_router, dependencies=[Depends(get_current_user), Depends(require_scope("query"))])
 
 # Register Pipeline System endpoints
-app.include_router(pipelines_router)
-app.include_router(compare_router)
-app.include_router(finetune_router)
-app.include_router(evaluations_router)
+app.include_router(pipelines_router, dependencies=[Depends(get_current_user), Depends(require_scope("admin"))])
+app.include_router(compare_router, dependencies=[Depends(get_current_user), Depends(require_scope("query"))])
+app.include_router(finetune_router, dependencies=[Depends(get_current_user), Depends(require_scope("admin"))])
+app.include_router(evaluations_router, dependencies=[Depends(get_current_user), Depends(require_scope("query"))])
 
 @app.get("/health")
 async def health(response: Response):
