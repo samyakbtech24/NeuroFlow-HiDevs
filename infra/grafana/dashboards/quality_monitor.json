@@ -1,0 +1,25 @@
+{
+  "title": "Quality Monitor",
+  "panels": [
+    {
+      "title": "Overall Score Trend",
+      "type": "timeseries",
+      "targets": [{"expr": "neuroflow_eval_overall", "refId": "A"}],
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0}
+    },
+    {
+      "title": "Faithfulness (24h Avg)",
+      "type": "stat",
+      "targets": [{"expr": "avg_over_time(neuroflow_eval_faithfulness[24h])", "refId": "A"}],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+    },
+    {
+      "title": "Documents Ingested per day",
+      "type": "stat",
+      "targets": [{"expr": "sum(increase(neuroflow_ingestion_docs_total[24h]))", "refId": "A"}],
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+    }
+  ],
+  "schemaVersion": 38,
+  "timezone": "browser"
+}

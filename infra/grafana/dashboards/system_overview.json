@@ -1,0 +1,31 @@
+{
+  "title": "System Overview",
+  "panels": [
+    {
+      "title": "Queries per minute",
+      "type": "timeseries",
+      "targets": [{"expr": "rate(neuroflow_queries_total[1m]) * 60", "refId": "A"}],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+    },
+    {
+      "title": "Retrieval Latency (P95)",
+      "type": "timeseries",
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(neuroflow_retrieval_latency_seconds_bucket[5m])) by (le))", "refId": "A"}],
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+    },
+    {
+      "title": "Generation Latency (P95)",
+      "type": "timeseries",
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(neuroflow_generation_latency_seconds_bucket[5m])) by (le))", "refId": "A"}],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+    },
+    {
+      "title": "Queue Depth",
+      "type": "gauge",
+      "targets": [{"expr": "neuroflow_queue_depth", "refId": "A"}],
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+    }
+  ],
+  "schemaVersion": 38,
+  "timezone": "browser"
+}

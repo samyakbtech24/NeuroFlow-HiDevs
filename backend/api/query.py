@@ -12,6 +12,7 @@ from backend.resilience.rate_limiter import rate_limiter
 from pipelines.retrieval.retriever import Retriever
 from pipelines.retrieval.context_assembler import assemble_context
 from pipelines.generation.generator import RAGGenerator
+from backend.monitoring.metrics import queries_total
 
 logger = logging.getLogger("query-api")
 
@@ -93,6 +94,7 @@ async def create_query(http_request: Request, request: QueryRequest):
                 request.query
             )
         logger.info(f"Initialized query run {run_id} (stream={request.stream})")
+        queries_total.labels(pipeline_id=str(request.pipeline_id), status="running").inc()
     except Exception as e:
         logger.error(f"Failed to insert pipeline_run record: {e}")
         raise HTTPException(

@@ -2,6 +2,7 @@ import time
 import logging
 import redis.asyncio as aioredis
 from backend.config import settings
+from backend.monitoring.metrics import circuit_breaker_trips, active_circuit_breakers_open
 
 logger = logging.getLogger("circuit_breaker")
 
@@ -57,6 +58,7 @@ class CircuitBreaker:
                 logger.info(f"CircuitBreaker [{self.name}]: Test call succeeded. Closing circuit.")
                 await self.redis.set(self.state_key, "closed")
                 await self.redis.set(self.failure_key, 0)
+                active_circuit_breakers_open.dec()
             elif state == "closed" or state is None:
                 # Reset failure count on success
                 await self.redis.set(self.failure_key, 0)
@@ -68,6 +70,8 @@ class CircuitBreaker:
                 logger.warning(f"CircuitBreaker [{self.name}]: Test call failed. Re-opening circuit.")
                 await self.redis.set(self.state_key, "open")
                 await self.redis.set(self.opened_at_key, time.time())
+                circuit_breaker_trips.labels(provider=self.name).inc()
+                active_circuit_breakers_open.inc()
             else:
                 # Normal failure counting
                 failures = await self.redis.incr(self.failure_key)
@@ -75,6 +79,8 @@ class CircuitBreaker:
                     logger.error(f"CircuitBreaker [{self.name}]: Failure threshold reached ({failures}). Tripping OPEN!")
                     await self.redis.set(self.state_key, "open")
                     await self.redis.set(self.opened_at_key, time.time())
+                    circuit_breaker_trips.labels(provider=self.name).inc()
+                    active_circuit_breakers_open.inc()
         
         # Do not swallow exceptions
         return False
