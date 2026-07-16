@@ -1,31 +1,29 @@
-FROM python:3.11-slim
-
+# Stage 1: Dependencies
+FROM python:3.11-slim AS deps
 WORKDIR /app
-
-# Install system dependencies (build-essential for C extensions, tesseract for OCR)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    tesseract-ocr \
-    libtesseract-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy and install python dependencies
-COPY backend/requirements.txt .
+# Install curl for the healthcheck in the final stage (wait, it's better to install in runtime)
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend and pipelines code
-COPY backend ./backend
-COPY pipelines ./pipelines
+# Stage 2: Runtime (minimal, non-root)
+FROM python:3.11-slim AS runtime
 
-# Configure PYTHONPATH so the packages are discoverable
-ENV PYTHONPATH=/app
+# Install curl for HEALTHCHECK
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Create a wrapper script in the root /app to route 'python -m worker' to the package
-RUN echo "import runpy; runpy.run_module('backend.worker', run_name='__main__')" > worker.py
+RUN groupadd -r neuroflow && useradd -r -g neuroflow neuroflow
+WORKDIR /app
 
-# Expose FastAPI port
+COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=deps /usr/local/bin /usr/local/bin
+COPY . .
+
+RUN chown -R neuroflow:neuroflow /app
+USER neuroflow
+
 EXPOSE 8000
 
-# Default command to run the FastAPI app
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
