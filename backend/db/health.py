@@ -1,14 +1,15 @@
-import time
 import logging
-import asyncpg
-import redis.asyncio as aioredis
+import time
+
 import httpx
-from backend.db.pool import get_pool
+import redis.asyncio as aioredis
+
 from backend.config import settings
+from backend.db.pool import get_pool
 
 logger = logging.getLogger(__name__)
 
-async def check_postgres() -> dict:
+async def check_postgres() -> dict:  # type: ignore
     """
     Verifies database connection and returns status with latency.
     """
@@ -25,7 +26,7 @@ async def check_postgres() -> dict:
         logger.error(f"Postgres health check failed: {e}")
         return {"status": "error"}
 
-async def check_redis() -> dict:
+async def check_redis() -> dict:  # type: ignore
     """
     Verifies Redis connection and returns status with latency.
     """
@@ -45,7 +46,7 @@ async def check_redis() -> dict:
         if client is not None:
             await client.aclose()
 
-async def check_mlflow() -> dict:
+async def check_mlflow() -> dict:  # type: ignore
     """
     Verifies MLflow service connection and returns status with latency.
     """

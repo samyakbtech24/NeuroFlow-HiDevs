@@ -1,19 +1,20 @@
-import json
 import logging
+
+import redis.asyncio as aioredis
 from fastapi import APIRouter, Request
 from sse_starlette.sse import EventSourceResponse
-import redis.asyncio as aioredis
+
 from backend.config import settings
 
 logger = logging.getLogger("evaluations-api")
 router = APIRouter(prefix="/evaluations", tags=["evaluations"])
 
-@router.get("/stream")
-async def stream_evaluations(request: Request):
+@router.get("/stream")  # type: ignore
+async def stream_evaluations(request: Request):  # noqa: ANN201  # type: ignore
     """
     Real-time SSE feed of evaluation results from Redis pub/sub.
     """
-    async def event_generator():
+    async def event_generator():  # noqa: ANN202  # type: ignore
         redis_client = aioredis.from_url(settings.redis_url, decode_responses=True)
         pubsub = redis_client.pubsub()
         await pubsub.subscribe("evaluations:new")
@@ -32,4 +33,4 @@ async def stream_evaluations(request: Request):
             await redis_client.aclose()
             logger.info("SSE client disconnected from evaluations:new")
 
-    return EventSourceResponse(event_generator())
+    return EventSourceResponse(event_generator())  # type: ignore

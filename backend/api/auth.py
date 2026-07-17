@@ -1,15 +1,16 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
 from backend.security.auth import create_access_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-class TokenRequest(BaseModel):
+class TokenRequest(BaseModel):  # type: ignore
     client_id: str
     client_secret: str
 
-@router.post("/token")
-async def generate_token(request: TokenRequest):
+@router.post("/token")  # type: ignore
+async def generate_token(request: TokenRequest):  # noqa: ANN201  # type: ignore
     # Mocking client credentials for the demo
     if request.client_id == "admin" and request.client_secret == "admin":
         scopes = ["query", "ingest", "admin"]

@@ -1,13 +1,12 @@
-import logging
-from typing import Optional
-import asyncpg
-
 import asyncio
+import logging
+
+import asyncpg
 
 logger = logging.getLogger(__name__)
 
 # Single global reference to the connection pool
-_pool: Optional[asyncpg.Pool] = None
+_pool: asyncpg.Pool | None = None
 
 async def init_pool(dsn: str, min_size: int = 5, max_size: int = 20) -> asyncpg.Pool:
     """
@@ -36,7 +35,7 @@ async def init_pool(dsn: str, min_size: int = 5, max_size: int = 20) -> asyncpg.
             if attempt == retries:
                 logger.error(f"Failed to initialize database pool after {retries} attempts: {e}")
                 raise
-            logger.warning(f"Database connection attempt {attempt}/{retries} failed. Retrying in {delay}s...")
+            logger.warning(f"Database connection attempt {attempt}/{retries} failed. Retrying in {delay}s...")  # noqa: E501
             await asyncio.sleep(delay)
 
 
@@ -60,5 +59,5 @@ def get_pool() -> asyncpg.Pool:
     Raises RuntimeError if it has not been initialized.
     """
     if _pool is None:
-        raise RuntimeError("Database pool is not initialized. Ensure init_pool was called at startup.")
+        raise RuntimeError("Database pool is not initialized. Ensure init_pool was called at startup.")  # noqa: E501
     return _pool

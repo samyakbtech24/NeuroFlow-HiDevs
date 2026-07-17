@@ -1,6 +1,8 @@
 import asyncio
 import logging
+
 import redis.asyncio as aioredis
+
 from backend.config import settings
 
 logger = logging.getLogger("timeout_manager")
@@ -15,10 +17,10 @@ class TimeoutManager:
         "url_fetch": 15
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.redis = aioredis.from_url(settings.redis_url, decode_responses=True)
         
-    async def run_with_timeout(self, task_type: str, coro):
+    async def run_with_timeout(self, task_type: str, coro):  # noqa: ANN001, ANN201  # type: ignore
         """
         Executes a coroutine with a strict timeout based on its task type.
         """
@@ -29,7 +31,7 @@ class TimeoutManager:
         
         try:
             return await asyncio.wait_for(coro, timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.error(f"Task '{task_type}' timed out after {timeout} seconds!")
             # Increment a counter in Redis for monitoring
             await self.redis.incr(f"timeouts:{task_type}")

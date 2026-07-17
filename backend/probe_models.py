@@ -1,8 +1,10 @@
 """Test which flash models are actually callable via chat completions."""
-import os, sys
-sys.stdout.reconfigure(encoding='utf-8')
-from dotenv import load_dotenv
-import openai
+import os
+import sys
+
+sys.stdout.reconfigure(encoding='utf-8')  # type: ignore
+import openai  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 

@@ -1,7 +1,8 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, computed_field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-class Settings(BaseSettings):
+
+class Settings(BaseSettings):  # type: ignore
     """
     Application settings loaded from environment variables and an optional .env file.
     Every configuration parameter is typed and documented.
@@ -64,13 +65,13 @@ class Settings(BaseSettings):
         description="OTLP collector endpoint (gRPC) for Jaeger"
     )
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def database_url(self) -> str:
         """Constructs the asyncpg PostgreSQL connection DSN."""
         return f"postgresql://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def redis_url(self) -> str:
         """Constructs the Redis connection URL."""

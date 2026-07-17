@@ -5,32 +5,35 @@ Run from project root: python backend/test_gemini_live.py
 import asyncio
 import os
 import sys
-sys.stdout.reconfigure(encoding='utf-8')
+
+sys.stdout.reconfigure(encoding='utf-8')  # type: ignore
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Load .env from project root so GEMINI_API_KEY is available on host machine
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # noqa: E402
+
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 
-from backend.providers.gemini_provider import GeminiProvider
-from backend.providers.base import ChatMessage
+from backend.providers.base import ChatMessage  # noqa: E402
+from backend.providers.gemini_provider import GeminiProvider  # noqa: E402
 
-async def test_gemini():
+
+async def test_gemini() -> None:
     api_key = os.getenv("GEMINI_API_KEY", "")
     if not api_key or api_key == "mock":
         print("ERROR: GEMINI_API_KEY is not set in environment.")
         print("Add it to your .env file: GEMINI_API_KEY=AIza...")
         return
 
-    print(f"Testing gemini-flash-latest (FREE rolling alias) with key: {api_key[:8]}...{api_key[-4:]}")
+    print(f"Testing gemini-flash-latest (FREE rolling alias) with key: {api_key[:8]}...{api_key[-4:]}")  # noqa: E501
     print("=" * 60)
 
     provider = GeminiProvider(model_name="gemini-flash-latest", api_key=api_key)
 
     messages = [
         ChatMessage(role="system", content="You are a concise AI assistant."),
-        ChatMessage(role="user", content="In one sentence, what is RAG (Retrieval Augmented Generation)?")
+        ChatMessage(role="user", content="In one sentence, what is RAG (Retrieval Augmented Generation)?")  # noqa: E501
     ]
 
     print("\n[1] Testing complete() call...")
@@ -49,7 +52,7 @@ async def test_gemini():
 
     print("\n" + "=" * 60)
     print("SUCCESS: gemini-flash-latest is LIVE and responding!")
-    print(f"Total billing for this test: $0.000000 (free tier, $0 guaranteed)")
+    print("Total billing for this test: $0.000000 (free tier, $0 guaranteed)")
 
 if __name__ == "__main__":
     asyncio.run(test_gemini())

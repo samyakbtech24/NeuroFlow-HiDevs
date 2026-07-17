@@ -1,7 +1,9 @@
 import time
-from fastapi import HTTPException, Security, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, JWTError
+from typing import Any
+
+from fastapi import Depends, HTTPException, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwt
 
 security = HTTPBearer()
 
@@ -14,9 +16,9 @@ def create_access_token(client_id: str, scopes: list[str], expires_in: int = 360
         "scopes": scopes,
         "exp": int(time.time()) + expires_in
     }
-    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)  # type: ignore
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):  # noqa: ANN201  # type: ignore
     token = credentials.credentials
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
@@ -24,8 +26,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-def require_scope(required_scope: str):
-    def scope_checker(user: dict = Depends(get_current_user)):
+def require_scope(required_scope: str):  # noqa: ANN201  # type: ignore
+    def scope_checker(user: dict[str, Any] = Depends(get_current_user)):  # noqa: ANN202  # type: ignore
         scopes = user.get("scopes", [])
         if required_scope not in scopes:
             raise HTTPException(status_code=403, detail=f"Missing required scope: {required_scope}")

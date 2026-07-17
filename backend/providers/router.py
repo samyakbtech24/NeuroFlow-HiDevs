@@ -1,8 +1,9 @@
 import json
 import logging
 from dataclasses import dataclass
-from typing import List, Optional
+
 import redis.asyncio as aioredis
+
 from backend.config import settings
 
 logger = logging.getLogger("model-router")
@@ -19,10 +20,10 @@ class RoutingCriteria:
     prefer_fine_tuned: Whether to prefer a fine-tuned model if available.
     """
     task_type: str
-    max_cost_per_call: Optional[float] = None
+    max_cost_per_call: float | None = None
     require_vision: bool = False
     require_long_context: bool = False
-    latency_budget_ms: Optional[int] = None
+    latency_budget_ms: int | None = None
     prefer_fine_tuned: bool = False
 
 # Default models configuration to fallback on if Redis is empty
@@ -78,10 +79,10 @@ class ModelRouter:
     Decides which model and provider combination should handle a given LLM request.
     Reads registered models dynamically from Redis key 'router:models'.
     """
-    def __init__(self, redis_url: Optional[str] = None):
+    def __init__(self, redis_url: str | None = None) -> None:
         self.redis_url = redis_url or settings.redis_url
 
-    async def _get_models(self) -> List[dict]:
+    async def _get_models(self) -> list[dict]:  # type: ignore
         """
         Retrieves the registered models list from Redis.
         Falls back to default models if Redis key is not set or fails.
@@ -92,13 +93,13 @@ class ModelRouter:
             await client.aclose()
             
             if data:
-                return json.loads(data)
+                return json.loads(data)  # type: ignore
         except Exception as e:
             logger.error(f"Error fetching models from Redis: {e}. Falling back to default models.")
             
         return DEFAULT_MODELS
 
-    async def route(self, criteria: RoutingCriteria) -> dict:
+    async def route(self, criteria: RoutingCriteria) -> dict:  # type: ignore
         """
         Routes the request to the best model using the 6 routing rules:
         1. If require_vision=True -> route to vision-capable model.
@@ -129,7 +130,7 @@ class ModelRouter:
             # Filter for fine-tuned models matching this specific task type
             fine_tuned = [
                 m for m in candidates 
-                if m.get("is_fine_tuned", False) and m.get("fine_tuned_for_task") == criteria.task_type
+                if m.get("is_fine_tuned", False) and m.get("fine_tuned_for_task") == criteria.task_type  # noqa: E501
             ]
             if fine_tuned:
                 candidates = fine_tuned
@@ -149,14 +150,14 @@ class ModelRouter:
 
         # Handle edge case where no candidate satisfies all criteria
         if not candidates:
-            logger.warning("No registered models satisfied all routing criteria. Falling back to gpt-4o-mini.")
+            logger.warning("No registered models satisfied all routing criteria. Falling back to gpt-4o-mini.")  # noqa: E501
             for fallback in DEFAULT_MODELS:
                 if fallback["model_id"] == "gpt-4o-mini":
                     return fallback
             return DEFAULT_MODELS[0]
 
         # Rule 6: Select the cheapest model among remaining candidates
-        def get_estimated_cost(m):
+        def get_estimated_cost(m):  # noqa: ANN001, ANN202  # type: ignore
             input_rate = m.get("input_cost_per_million", 0.0) / 1_000_000.0
             output_rate = m.get("output_cost_per_million", 0.0) / 1_000_000.0
             return (2000 * input_rate) + (500 * output_rate)

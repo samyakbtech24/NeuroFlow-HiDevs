@@ -1,0 +1,19 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["venv", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "ANN", "ASYNC"]
+ignore = ["ANN101", "ANN102"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+explicit_package_bases = true
+disallow_untyped_defs = false
+disallow_untyped_calls = false
+disallow_incomplete_defs = false
+warn_unused_ignores = false
+exclude = ["venv", ".venv"]

@@ -1,7 +1,8 @@
 """Lists all available Gemini models via the OpenAI compatibility endpoint."""
-import os, asyncio
-from dotenv import load_dotenv
+import os
+
 import openai
+from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 

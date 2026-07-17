@@ -1,28 +1,23 @@
 import asyncio
-import base64
-import json
 import logging
 import os
 import sys
 import time
+
 import httpx
 
 # Add backend directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pipelines.ingestion.extractors.extracted_page import ExtractedPage
-from pipelines.ingestion.extractors.pdf_extractor import extract_pdf
-from pipelines.ingestion.extractors.docx_extractor import extract_docx
-from pipelines.ingestion.extractors.image_extractor import extract_image
+from pipelines.ingestion.chunker import chunk_document
 from pipelines.ingestion.extractors.csv_extractor import extract_csv
-from pipelines.ingestion.extractors.url_extractor import extract_url
-from pipelines.ingestion.chunker import chunk_document, chunk_fixed_size
+from pipelines.ingestion.extractors.extracted_page import ExtractedPage
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("test-ingestion")
 
-def test_extractors_and_chunker_standalone():
+def test_extractors_and_chunker_standalone() -> None:
     print("\n--- 1. Testing Extractors & Chunker Standalone ---")
     
     # A. CSV Extractor Test
@@ -38,25 +33,25 @@ def test_extractors_and_chunker_standalone():
     print("\nTesting Chunker Strategy auto-selection...")
     
     # Test Table Auto-Selection
-    table_page = ExtractedPage(page_number=1, content="| h1 |\n|---|", content_type="table", metadata={})
+    table_page = ExtractedPage(page_number=1, content="| h1 |\n|---|", content_type="table", metadata={})  # noqa: E501
     strategy_table = asyncio.run(chunk_document([table_page], {"source_type": "csv"}))
     print(f"Table page chunks count: {len(strategy_table)}")
     
     # Test Hierarchical Auto-Selection
     docx_pages = [
-        ExtractedPage(page_number=1, content="Title", content_type="text", metadata={"level": "h1", "section": "Intro"}),
-        ExtractedPage(page_number=2, content="Body text", content_type="text", metadata={"section": "Intro"})
+        ExtractedPage(page_number=1, content="Title", content_type="text", metadata={"level": "h1", "section": "Intro"}),  # noqa: E501
+        ExtractedPage(page_number=2, content="Body text", content_type="text", metadata={"section": "Intro"})  # noqa: E501
     ]
-    chunks_docx = asyncio.run(chunk_document(docx_docx := docx_pages, {"source_type": "docx"}))
+    chunks_docx = asyncio.run(chunk_document(_docx_docx := docx_pages, {"source_type": "docx"}))
     print(f"Hierarchical docx chunks: {len(chunks_docx)}")
-    assert chunks_docx[1]["parent_id"] == chunks_docx[0]["id"], "Child section should point to parent section ID"
+    assert chunks_docx[1]["parent_id"] == chunks_docx[0]["id"], "Child section should point to parent section ID"  # noqa: E501
     print("Hierarchical parent-child linking verified successfully.")
 
-async def test_full_api_pipeline():
+async def test_full_api_pipeline() -> None:
     print("\n--- 2. Testing Ingestion API and Deduplication (against http://localhost:8000) ---")
     
     # Define a clean unique test CSV content
-    test_content = f"name,age,city\nUserA,30,NewYork\nUserB,25,Boston\nTimestamp,{time.time()},Local"
+    test_content = f"name,age,city\nUserA,30,NewYork\nUserB,25,Boston\nTimestamp,{time.time()},Local"  # noqa: E501
     file_bytes = test_content.encode('utf-8')
     filename = f"test_data_{int(time.time())}.csv"
     
@@ -87,7 +82,7 @@ async def test_full_api_pipeline():
         assert response_dup.status_code == 200, "Deduplicated upload should succeed"
         
         res_dup_data = response_dup.json()
-        assert res_dup_data["document_id"] == doc_id, "Deduplicated document ID should match the first ID"
+        assert res_dup_data["document_id"] == doc_id, "Deduplicated document ID should match the first ID"  # noqa: E501
         assert res_dup_data["duplicate"] is True, "Deduplicated document should have duplicate=True"
         print("Deduplication logic verified successfully!")
 
@@ -109,7 +104,7 @@ async def test_full_api_pipeline():
         else:
             raise TimeoutError("Ingestion worker took too long to process document")
 
-def main():
+def main() -> None:
     test_extractors_and_chunker_standalone()
     
     # Wait for docker compose build/recreate to complete before calling API

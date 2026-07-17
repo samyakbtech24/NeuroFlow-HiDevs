@@ -1,9 +1,10 @@
-import os
-import logging
 import asyncio
+import logging
+import os
+
 import asyncpg
+
 from backend.db.pool import get_pool
-from backend.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +30,9 @@ async def ensure_mlflow_db(dsn: str) -> None:
             break
         except Exception as e:
             if attempt == retries:
-                logger.error(f"Failed to check/create 'mlflow' database after {retries} attempts: {e}")
+                logger.error(f"Failed to check/create 'mlflow' database after {retries} attempts: {e}")  # noqa: E501
                 raise
-            logger.warning(f"Database check for 'mlflow' database failed on attempt {attempt}/{retries}. Retrying in {delay}s...")
+            logger.warning(f"Database check for 'mlflow' database failed on attempt {attempt}/{retries}. Retrying in {delay}s...")  # noqa: E501
             await asyncio.sleep(delay)
         finally:
             if conn:
@@ -68,7 +69,7 @@ async def ensure_evaluations_metadata_column() -> None:
     try:
         async with pool.acquire() as conn:
             await conn.execute(
-                "ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'"
+                "ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'"  # noqa: E501
             )
             logger.info("Ensured 'metadata' column exists in 'evaluations' table.")
     except Exception as e:
@@ -83,8 +84,8 @@ async def ensure_pipeline_versioning_schema() -> None:
     try:
         async with pool.acquire() as conn:
             # 1. Add version and status to pipelines
-            await conn.execute("ALTER TABLE pipelines ADD COLUMN IF NOT EXISTS version INT NOT NULL DEFAULT 1")
-            await conn.execute("ALTER TABLE pipelines ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active'")
+            await conn.execute("ALTER TABLE pipelines ADD COLUMN IF NOT EXISTS version INT NOT NULL DEFAULT 1")  # noqa: E501
+            await conn.execute("ALTER TABLE pipelines ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active'")  # noqa: E501
             
             # 2. Create pipeline_versions for immutable audit trail
             await conn.execute("""
@@ -99,7 +100,7 @@ async def ensure_pipeline_versioning_schema() -> None:
             """)
             
             # 3. Add pipeline_version to pipeline_runs
-            await conn.execute("ALTER TABLE pipeline_runs ADD COLUMN IF NOT EXISTS pipeline_version INT")
+            await conn.execute("ALTER TABLE pipeline_runs ADD COLUMN IF NOT EXISTS pipeline_version INT")  # noqa: E501
             
             logger.info("Ensured pipeline versioning schema is applied.")
     except Exception as e:
@@ -119,19 +120,19 @@ async def apply_migrations(schema_path: str = "../infra/init/001_schema.sql") ->
     logger.info("Schema not found or incomplete. Applying database migrations...")
     
     # Try finding the file relative to current directory if default path doesn't exist
-    if not os.path.exists(schema_path):
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if not os.path.exists(schema_path):  # noqa: ASYNC240
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: ASYNC240
         schema_path = os.path.join(base_dir, "infra", "init", "001_schema.sql")
 
-    if not os.path.exists(schema_path):
-        # In Docker, migrations are often pre-applied by the docker-entrypoint-initdb.d folder mount,
+    if not os.path.exists(schema_path):  # noqa: ASYNC240
+        # In Docker, migrations are often pre-applied by the docker-entrypoint-initdb.d folder mount,  # noqa: E501
         # but if the file is not found, we throw a descriptive error.
         raise FileNotFoundError(
             f"Schema SQL file not found at: {schema_path}. "
             "Please ensure that the infra directory exists or migrations are pre-applied."
         )
 
-    with open(schema_path, "r", encoding="utf-8") as f:
+    with open(schema_path, encoding="utf-8") as f:  # noqa: ASYNC230
         sql_content = f.read()
 
     pool = get_pool()

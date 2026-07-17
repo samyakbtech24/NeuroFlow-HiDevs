@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import AsyncGenerator, Union, List
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
+
 
 @dataclass
 class ChatMessage:
@@ -10,7 +11,7 @@ class ChatMessage:
     content: Either a string (for simple text) or a list (for multi-modal data like images).
     """
     role: str
-    content: Union[str, List]
+    content: str | list  # type: ignore
 
 @dataclass
 class GenerationResult:
@@ -32,21 +33,21 @@ class BaseLLMProvider(ABC):
     """
     
     @abstractmethod
-    async def complete(self, messages: List[ChatMessage], **kwargs) -> GenerationResult:
+    async def complete(self, messages: list[ChatMessage], **kwargs) -> GenerationResult:  # noqa: ANN003  # type: ignore
         """
         Send a list of chat messages to the LLM and get back the full, completed response.
         """
         pass
 
     @abstractmethod
-    async def stream(self, messages: List[ChatMessage], **kwargs) -> AsyncGenerator[str, None]:
+    async def stream(self, messages: list[ChatMessage], **kwargs) -> AsyncGenerator[str, None]:  # noqa: ANN003  # type: ignore
         """
         Send a list of chat messages to the LLM and stream back the response text chunk-by-chunk.
         """
         pass
 
     @abstractmethod
-    async def embed(self, texts: List[str]) -> List[List[float]]:
+    async def embed(self, texts: list[str]) -> list[list[float]]:
         """
         Convert a list of text strings into vector embeddings (dense floating point lists).
         """

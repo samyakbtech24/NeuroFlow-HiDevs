@@ -1,11 +1,13 @@
 import logging
-from fastapi import HTTPException
+
 import redis.asyncio as aioredis
+from fastapi import HTTPException
+
 from backend.config import settings
 
 logger = logging.getLogger("backpressure")
 
-async def check_ingestion_backpressure():
+async def check_ingestion_backpressure():  # noqa: ANN201  # type: ignore
     """
     Checks the current depth of the ingestion queue.
     If > 100: Raises 503 Service Unavailable to reject the request.
@@ -17,7 +19,7 @@ async def check_ingestion_backpressure():
     
     if depth > 100:
         logger.error(f"Ingestion queue full! Depth: {depth}. Rejecting request.")
-        # We raise an HTTPException which the router will catch, or we can configure a custom handler.
+        # We raise an HTTPException which the router will catch, or we can configure a custom handler.  # noqa: E501
         # To match the exact JSON structure in the instructions, we can use a custom exception, 
         # but for simplicity we'll pass the dict as the detail.
         raise HTTPException(

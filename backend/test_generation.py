@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import uuid
+
 import httpx
 import redis.asyncio as aioredis
 
@@ -11,7 +12,7 @@ import redis.asyncio as aioredis
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.config import settings
-from backend.db.pool import init_pool, close_pool, get_pool
+from backend.db.pool import close_pool, get_pool, init_pool
 
 # Override hosts to localhost if running on host machine outside docker container
 if not os.path.exists("/.dockerenv"):
@@ -22,7 +23,7 @@ if not os.path.exists("/.dockerenv"):
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("test-generation")
 
-async def verify_database_and_redis(run_id: uuid.UUID):
+async def verify_database_and_redis(run_id: uuid.UUID) -> None:
     print("\n--- 3. Verifying Database Run Log and Redis Queue ---")
     pool = get_pool()
     
@@ -33,12 +34,12 @@ async def verify_database_and_redis(run_id: uuid.UUID):
             SELECT id, pipeline_id, query, retrieved_chunk_ids, generation, status, model_used, latency_ms 
             FROM pipeline_runs 
             WHERE id = $1
-            """,
+            """,  # noqa: E501
             run_id
         )
         
     assert row is not None, "pipeline_runs row should exist in database"
-    print(f"Postgres run log found:")
+    print("Postgres run log found:")
     print(f"  Query:        '{row['query']}'")
     print(f"  Status:       '{row['status']}'")
     print(f"  Model Used:   '{row['model_used']}'")
@@ -53,17 +54,17 @@ async def verify_database_and_redis(run_id: uuid.UUID):
     print(f"Redis 'queue:eval' length: {queue_len}")
     
     if queue_len > 0:
-        # Pop the latest item (or just examine it without removing if possible, but pop is fine for test verification)
+        # Pop the latest item (or just examine it without removing if possible, but pop is fine for test verification)  # noqa: E501
         item_bytes = await redis_client.rpop("queue:eval")
         if item_bytes:
             payload = json.loads(item_bytes.decode("utf-8"))
             print(f"Redis queued job payload: {payload}")
-            assert payload["run_id"] == str(run_id), "Queued job run_id should match the execution run_id"
+            assert payload["run_id"] == str(run_id), "Queued job run_id should match the execution run_id"  # noqa: E501
             print("Redis evaluation trigger verified successfully!")
             
     await redis_client.aclose()
 
-async def test_streaming_pipeline():
+async def test_streaming_pipeline() -> None:
     # Make sure we use a valid pipeline_id
     pipeline_id = uuid.UUID("11111111-1111-1111-1111-111111111111")
     
@@ -134,7 +135,7 @@ async def test_streaming_pipeline():
                         if etype == "retrieval_start":
                             print("Event: [retrieval_start]")
                         elif etype == "retrieval_complete":
-                            print(f"Event: [retrieval_complete] - {event['chunk_count']} chunks found from: {event['sources']}")
+                            print(f"Event: [retrieval_complete] - {event['chunk_count']} chunks found from: {event['sources']}")  # noqa: E501
                         elif etype == "token":
                             # Stream tokens progressively on same line
                             sys.stdout.write(event["delta"])
@@ -150,9 +151,9 @@ async def test_streaming_pipeline():
         print("\nSSE stream completed!")
         
         # Assertions
-        assert len(events_received) >= 4, "Should receive at least retrieval_start, retrieval_complete, token, and done events"
+        assert len(events_received) >= 4, "Should receive at least retrieval_start, retrieval_complete, token, and done events"  # noqa: E501
         assert len(tokens) > 0, "Should receive token events"
-        assert len(citations) > 0, "Should resolve at least 1 citation for seeded content matching query"
+        assert len(citations) > 0, "Should resolve at least 1 citation for seeded content matching query"  # noqa: E501
         print(f"First Citation Document: '{citations[0]['document']}'")
         assert citations[0]["invalid_citation"] is False, "Citation should be valid"
         

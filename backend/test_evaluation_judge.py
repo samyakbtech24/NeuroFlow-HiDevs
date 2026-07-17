@@ -3,13 +3,14 @@ import json
 import os
 import sys
 import uuid
+
 import httpx
 
 # Add parent directory to path to allow importing packages
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.config import settings
-from backend.db.pool import init_pool, close_pool, get_pool
+from backend.db.pool import close_pool, get_pool, init_pool
 from evaluation.judge import EvaluationJudge
 
 # Override hosts to localhost if running on host machine outside docker container
@@ -17,7 +18,7 @@ if not os.path.exists("/.dockerenv"):
     settings.postgres_host = "localhost"
     settings.redis_host = "localhost"
 
-async def test_evaluation_judge_flow():
+async def test_evaluation_judge_flow() -> None:
     # 1. Initialize DB pool
     print("\n--- 1. Initializing DB Connection Pool ---")
     await init_pool(settings.database_url)
@@ -48,7 +49,7 @@ async def test_evaluation_judge_flow():
             INSERT INTO chunks (id, document_id, content, embedding, chunk_index, token_count, metadata)
             VALUES ($1, $2, 'Hierarchical Navigable Small World HNSW graphs are state of the art indexing.', $3::float4[], 0, 10, '{}')
             ON CONFLICT (id) DO NOTHING
-            """,
+            """,  # noqa: E501
             chunk_id,
             uuid.uuid4(),
             [0.1] * 1536
@@ -59,7 +60,7 @@ async def test_evaluation_judge_flow():
             """
             INSERT INTO pipeline_runs (id, pipeline_id, query, retrieved_chunk_ids, generation, status, created_at)
             VALUES ($1, $2, 'What is HNSW?', $3, 'HNSW are hierarchical navigable small world graphs.', 'complete', NOW())
-            """,
+            """,  # noqa: E501
             run_id,
             pipeline_id,
             [chunk_id]
@@ -77,7 +78,7 @@ async def test_evaluation_judge_flow():
     # Verify evaluations row in PostgreSQL
     async with pool.acquire() as conn:
         eval_row = await conn.fetchrow(
-            "SELECT faithfulness, answer_relevance, context_precision, context_recall, overall_score, metadata FROM evaluations WHERE run_id = $1",
+            "SELECT faithfulness, answer_relevance, context_precision, context_recall, overall_score, metadata FROM evaluations WHERE run_id = $1",  # noqa: E501
             run_id
         )
     print(f"Postgres evaluations table row: {eval_row}")
@@ -97,7 +98,7 @@ async def test_evaluation_judge_flow():
         assert resp.status_code == 200, "PATCH rating request should succeed"
         
         resp_data = resp.json()
-        assert resp_data["calibration_needed"] is True, "Large rating gap should flag calibration_needed = True"
+        assert resp_data["calibration_needed"] is True, "Large rating gap should flag calibration_needed = True"  # noqa: E501
 
         # Verify evaluations table has been updated
         async with pool.acquire() as conn:

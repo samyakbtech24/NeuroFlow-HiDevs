@@ -1,14 +1,16 @@
+import logging
 import time
 import uuid
-import logging
+
 import redis.asyncio as aioredis
 from fastapi import HTTPException
+
 from backend.config import settings
 
 logger = logging.getLogger("rate_limiter")
 
-class RateLimitExceeded(Exception):
-    def __init__(self, retry_after: int):
+class RateLimitExceeded(Exception):  # noqa: N818
+    def __init__(self, retry_after: int) -> None:
         self.retry_after = retry_after
         super().__init__(f"Rate limit exceeded. Try again in {retry_after} seconds.")
 
@@ -55,10 +57,10 @@ end
 """
 
 class RateLimiter:
-    def __init__(self):
+    def __init__(self) -> None:
         self.redis = aioredis.from_url(settings.redis_url, decode_responses=True)
         
-    async def check_token_bucket(self, key: str, max_tokens: int, refill_rate_per_sec: float, requested: int = 1):
+    async def check_token_bucket(self, key: str, max_tokens: int, refill_rate_per_sec: float, requested: int = 1) -> None:  # noqa: E501
         """
         Token bucket algorithm. 
         """
@@ -83,7 +85,7 @@ class RateLimiter:
             logger.warning(f"Token bucket empty for {key}. Denying request.")
             raise RateLimitExceeded(retry_after)
             
-    async def check_sliding_window(self, key: str, limit: int, window_seconds: int):
+    async def check_sliding_window(self, key: str, limit: int, window_seconds: int) -> None:
         """
         Sliding window using a Redis Sorted Set.
         """

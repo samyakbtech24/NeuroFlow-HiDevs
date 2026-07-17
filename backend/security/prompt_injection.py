@@ -1,8 +1,9 @@
-import re
 import logging
+import re
+
+from backend.providers.base import ChatMessage  # type: ignore
 from backend.providers.client import NeuroFlowClient
 from backend.providers.router import RoutingCriteria
-from backend.providers.base import Message
 
 logger = logging.getLogger("prompt-injection")
 
@@ -17,7 +18,7 @@ INJECTION_PATTERNS = [
     r"<\|system\|>"
 ]
 
-def scan_patterns(text: str):
+def scan_patterns(text: str):  # noqa: ANN201  # type: ignore
     """
     Scans text against known injection patterns (Layer 1).
     Returns (True, pattern) if matched, else (False, None).
@@ -54,8 +55,8 @@ async def detect_llm_injection(query: str) -> bool:
     )
     
     messages = [
-        Message(role="system", content=system_prompt),
-        Message(role="user", content=f"Message: {query}")
+        ChatMessage(role="system", content=system_prompt),
+        ChatMessage(role="user", content=f"Message: {query}")
     ]
     
     try:

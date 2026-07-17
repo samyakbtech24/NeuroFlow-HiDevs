@@ -1,9 +1,11 @@
 import asyncio
-import httpx
 import json
 import time
 
-async def test_pipelines():
+import httpx
+
+
+async def test_pipelines() -> None:
     print("Testing Pipeline Creation and Comparison...")
     
     # 1. Create Pipeline A (Legal Research)

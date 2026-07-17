@@ -1,14 +1,16 @@
-import bleach
-import re
 import ipaddress
+import re
 from urllib.parse import urlparse
+
+import bleach
 from fastapi import HTTPException
+
 
 def sanitize_text(text: str) -> str:
     """Strips HTML from all text inputs."""
     if not text:
         return text
-    return bleach.clean(text, tags=[], strip=True)
+    return bleach.clean(text, tags=[], strip=True)  # type: ignore
 
 def validate_url(url: str) -> str:
     """
@@ -36,7 +38,7 @@ def validate_url(url: str) -> str:
         
     return url
 
-def validate_file_bytes(file_bytes: bytes, filename: str, mime_type: str):
+def validate_file_bytes(file_bytes: bytes, filename: str, mime_type: str) -> bool:
     """
     Checks file magic bytes to ensure they match expected format.
     Specifically rejects executables disguised as PDFs.
@@ -48,10 +50,10 @@ def validate_file_bytes(file_bytes: bytes, filename: str, mime_type: str):
     
     # Reject MZ (Windows PE) and ELF (Linux) executables immediately
     if magic_start.startswith(b'MZ') or magic_start == b'\x7fELF':
-        raise HTTPException(status_code=400, detail="Malicious file detected: Executable bytes found.")
+        raise HTTPException(status_code=400, detail="Malicious file detected: Executable bytes found.")  # noqa: E501
         
     if mime_type == "application/pdf":
         if not file_bytes.startswith(b'%PDF'):
-            raise HTTPException(status_code=400, detail="File type mismatch: Not a valid PDF document.")
+            raise HTTPException(status_code=400, detail="File type mismatch: Not a valid PDF document.")  # noqa: E501
             
     return True

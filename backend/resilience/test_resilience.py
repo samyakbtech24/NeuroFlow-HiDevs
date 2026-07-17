@@ -1,21 +1,20 @@
 import asyncio
-import time
-import uuid
 import logging
-from fastapi import HTTPException
+import uuid
+from typing import Never
+
 from backend.resilience.circuit_breaker import CircuitBreaker, CircuitOpenError
-from backend.resilience.rate_limiter import rate_limiter, RateLimitExceeded
-from backend.config import settings
+from backend.resilience.rate_limiter import RateLimitExceeded, rate_limiter
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("test-resilience")
 
-async def test_circuit_breaker():
+async def test_circuit_breaker() -> None:
     logger.info("--- Testing Circuit Breaker ---")
     breaker_name = f"test_provider_{uuid.uuid4().hex[:6]}"
     
     # Mock a function that always fails
-    async def failing_api_call():
+    async def failing_api_call() -> Never:
         raise ValueError("Simulated Provider Error")
         
     # Trip the breaker by failing exactly 5 times
@@ -35,7 +34,7 @@ async def test_circuit_breaker():
     except CircuitOpenError:
         logger.info("Success: Circuit Breaker properly OPENED on the 6th call!")
         
-async def test_token_bucket():
+async def test_token_bucket() -> None:
     logger.info("--- Testing Token Bucket (Rate Limiter) ---")
     bucket_key = f"test_pipeline_{uuid.uuid4().hex[:6]}"
     
@@ -55,9 +54,9 @@ async def test_token_bucket():
         await rate_limiter.check_token_bucket(bucket_key, max_tokens, refill_rate)
         assert False, "Token bucket allowed request beyond its maximum capacity!"
     except RateLimitExceeded as e:
-        logger.info(f"Success: Token bucket accurately blocked the 61st request with a 429! (Retry after {e.retry_after}s)")
+        logger.info(f"Success: Token bucket accurately blocked the 61st request with a 429! (Retry after {e.retry_after}s)")  # noqa: E501
 
-async def main():
+async def main() -> None:
     await test_circuit_breaker()
     await test_token_bucket()
     
