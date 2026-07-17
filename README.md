@@ -29,3 +29,7 @@ To maintain high availability under adverse conditions, the platform implements 
 - **Database:** PostgreSQL (pgvector for embeddings, asyncpg)
 - **Cache & Queues:** Redis (aioredis)
 - **Observability:** MLflow (Experiment tracking and Model Registry)
+
+## Live Production Environment
+
+The live API endpoint is accessible at: [PENDING_LIVE_URL]
