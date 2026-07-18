@@ -32,4 +32,4 @@ To maintain high availability under adverse conditions, the platform implements 
 
 ## Live Production Environment
 
-The live API endpoint is accessible at: [PENDING_LIVE_URL]
+The live API endpoint is accessible at: https://neuroflow-hidevs.onrender.com
