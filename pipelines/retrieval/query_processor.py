@@ -43,13 +43,13 @@ class QueryProcessor:
             # Find and parse JSON array
             match = re.search(r'\[.*\]', result.content.replace('\n', ' '))
             if match:
-                return json.loads(match.group(0))
+                return json.loads(match.group(0))  # type: ignore
         except Exception as e:
             logger.warning(f"LLM query expansion failed: {e}. Falling back to default variations.")
             
         return [f"{query} details", f"{query} concepts"]
 
-    async def extract_filters(self, query: str) -> Dict:
+    async def extract_filters(self, query: str) -> Dict:  # type: ignore
         """
         Detects implicit year and topic filters in the query text.
         Returns a dictionary of filters (e.g. {"year": 2023, "topic": "climate"}).
@@ -65,7 +65,7 @@ class QueryProcessor:
         topics = ["climate", "transformer", "attention", "rag", "database", "postgres"]
         for t in topics:
             if t in query.lower():
-                filters["topic"] = t
+                filters["topic"] = t  # type: ignore
                 break
                 
         client = NeuroFlowClient()

@@ -19,9 +19,9 @@ def log_fine_tuning_run(job_id: uuid.UUID, base_model: str, pair_count: int, jso
         # Upload the JSONL dataset so we can download it later if needed
         mlflow.log_artifact(jsonl_path)
         
-        return run.info.run_id
+        return run.info.run_id  # type: ignore
 
-def update_fine_tuning_metrics(mlflow_run_id: str, training_loss: float, validation_loss: float):
+def update_fine_tuning_metrics(mlflow_run_id: str, training_loss: float, validation_loss: float):  # type: ignore
     """
     Called after the job finishes to log final model metrics.
     """

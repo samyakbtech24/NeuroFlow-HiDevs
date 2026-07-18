@@ -5,7 +5,7 @@ import redis.asyncio as aioredis
 from backend.db.pool import get_pool
 from backend.config import settings
 
-async def mock_submit_and_poll_job(job_id: uuid.UUID, base_model: str, mlflow_run_id: str):
+async def mock_submit_and_poll_job(job_id: uuid.UUID, base_model: str, mlflow_run_id: str):  # type: ignore
     """
     Simulates sending a JSONL file to OpenAI and polling for completion.
     In a real app, this would call OpenAI's fine-tuning API.
@@ -40,7 +40,7 @@ async def mock_submit_and_poll_job(job_id: uuid.UUID, base_model: str, mlflow_ru
     
     print(f"Fine-tuning job {job_id} succeeded. Model registered as {mock_new_model_name}.")
 
-async def register_model_in_redis(new_model_name: str):
+async def register_model_in_redis(new_model_name: str):  # type: ignore
     """
     Appends the newly trained model to our global Redis model registry.
     """

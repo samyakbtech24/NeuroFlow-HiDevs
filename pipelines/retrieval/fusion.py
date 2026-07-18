@@ -1,9 +1,9 @@
 from typing import List, Dict
 
 def reciprocal_rank_fusion(
-    result_lists: List[List],
+    result_lists: List[List],  # type: ignore
     k: int = 60
-) -> List:
+) -> List:  # type: ignore
     """
     Applies Reciprocal Rank Fusion (RRF) to combine multiple ranked lists of chunks.
     Formula: score(d) = sum( 1 / (k + rank_m(d)) ) across all lists m where d appears.

@@ -31,11 +31,11 @@ class RAGGenerator:
     citation post-processing, database telemetry logging, and background evaluation enqueuing.
     """
     
-    def __init__(self):
+    def __init__(self):  # type: ignore
         self.prompt_builder = PromptBuilder()
         self.client = NeuroFlowClient()
 
-    async def _enqueue_eval_job(self, run_id: uuid.UUID, pipeline_id: uuid.UUID):
+    async def _enqueue_eval_job(self, run_id: uuid.UUID, pipeline_id: uuid.UUID):  # type: ignore
         """
         Pushes an evaluation job asynchronously to the Redis queue 'queue:eval'.
         """

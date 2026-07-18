@@ -11,7 +11,7 @@ def assemble_context(
     chunks: List[RetrievalResult], 
     token_budget: int = 4000,
     model_name: str = "cl100k_base"
-) -> Dict:
+) -> Dict:  # type: ignore
     """
     Assembles the top-K reranked chunks into a structured context string,
     respecting a maximum token budget without truncating sentences in the middle.

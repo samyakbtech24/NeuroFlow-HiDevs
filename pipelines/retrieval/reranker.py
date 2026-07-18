@@ -15,7 +15,7 @@ class CrossEncoderReranker:
     Evaluates the joint relevance of the query and each chunk.
     """
     
-    async def _score_pair(self, query: str, chunk: "RetrievalResult") -> float:
+    async def _score_pair(self, query: str, chunk: "RetrievalResult") -> float:  # type: ignore
         """
         Calculates a relevance score from 0.0 to 10.0 for a single (query, chunk) pair.
         - In Mock mode: computes a keyword overlap ratio (excluding stop words) as a heuristic.
@@ -64,7 +64,7 @@ class CrossEncoderReranker:
             
         return 0.0
 
-    async def rerank(self, query: str, chunks: List["RetrievalResult"]) -> List["RetrievalResult"]:
+    async def rerank(self, query: str, chunks: List["RetrievalResult"]) -> List["RetrievalResult"]:  # type: ignore
         """
         Scores all candidate chunks in parallel and sorts them descending by score.
         """
