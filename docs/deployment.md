@@ -24,9 +24,9 @@ The Web Service will run both the FastAPI backend and the Background Worker conc
 1. Click "New" in the Render dashboard and select "Web Service".
 2. Choose "Build and deploy from a Git repository".
 3. Connect your GitHub account and select the repository.
-4. Set the "Root Directory" to the base folder or leave it blank.
+4. Set the "Root Directory" to `backend`.
 5. Set the "Environment" to "Docker".
-6. Specify the "Dockerfile Path" as `./backend/Dockerfile`.
+6. Specify the "Dockerfile Path" as `Dockerfile`.
 7. Navigate to the "Advanced" section and click "Add Environment Variable".
 8. Add the variables listed in the `.env.example` file.
 9. Map the `POSTGRES_URL` and `REDIS_URL` variables to the internal URLs copied earlier.
