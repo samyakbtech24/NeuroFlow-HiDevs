@@ -17,7 +17,14 @@ from backend.security.validators import validate_file_bytes, validate_url
 logger = logging.getLogger("ingest-api")
 router = APIRouter()
 
-@router.post("/", status_code=202)  # type: ignore
+@router.post(
+    "/",
+    status_code=202,
+    summary="Ingest a document",
+    description="Upload a document file or provide a URL for asynchronous background processing. Handles backpressure and rate limiting automatically.",
+    response_description="Returns a document tracking ID for polling ingestion status.",
+    tags=["Ingestion"]
+)  # type: ignore
 async def ingest_document(  # noqa: ANN201  # type: ignore
     request: Request,
     file: UploadFile | None = File(None),

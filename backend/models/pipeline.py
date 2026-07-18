@@ -44,7 +44,7 @@ class EvaluationConfig(BaseModel):  # type: ignore
 class PipelineConfig(BaseModel):  # type: ignore
     model_config = ConfigDict(extra='forbid')
     
-    name: str = Field(..., description="Unique name for this pipeline")
+    name: str = Field(..., description="Unique name for this pipeline", json_schema_extra={"example": "Enterprise RAG Pipeline"})
     description: str | None = Field(default=None, description="Human readable description")
     ingestion: IngestionConfig
     retrieval: RetrievalConfig
