@@ -18,6 +18,8 @@ class RetrievalConfig(BaseModel):  # type: ignore
     top_k_after_rerank: int = Field(default=5, description="Final number of chunks to send to generator")  # noqa: E501
     query_expansion: bool = Field(default=False, description="Whether to expand queries before retrieval")  # noqa: E501
     metadata_filters_enabled: bool = Field(default=False, description="Whether to apply metadata filtering")  # noqa: E501
+    ef_search: int = Field(default=100, description="HNSW ef_search parameter for pgvector tuning")  # noqa: E501
+    enable_query_cache: bool = Field(default=True, description="Enable Redis caching for full query results")  # noqa: E501
 
 class ModelRoutingConfig(BaseModel):  # type: ignore
     model_config = ConfigDict(extra='forbid')
