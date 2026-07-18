@@ -17,8 +17,12 @@ WORKDIR /app
 COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=deps /usr/local/bin /usr/local/bin
 COPY . .
+COPY start.sh .
 
-RUN chown -R neuroflow:neuroflow /app
+# Adjust ownership and make script executable
+RUN chown -R neuroflow:neuroflow /app && \
+    chmod +x start.sh
+
 USER neuroflow
 
 EXPOSE 8000
@@ -26,4 +30,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8000/health || exit 1
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+# Start both API and Worker concurrently via start.sh
+CMD ["bash", "start.sh"]
