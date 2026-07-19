@@ -1,13 +1,13 @@
 import io
 import logging
-from typing import List
+
 import docx
 
 from pipelines.ingestion.extractors.extracted_page import ExtractedPage
 
 logger = logging.getLogger("docx-extractor")
 
-def extract_docx(file_bytes: bytes) -> List[ExtractedPage]:
+def extract_docx(file_bytes: bytes) -> list[ExtractedPage]:
     """
     Extracts text and tables from DOCX bytes.
     - Extracts paragraphs, tables, and headers separately.

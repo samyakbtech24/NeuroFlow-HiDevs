@@ -2,12 +2,14 @@ import asyncio
 import json
 import os
 import sys
+
 from scipy.stats import pearsonr
 
 # Add parent directory to path to allow importing packages
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from evaluation.metrics.faithfulness import evaluate_faithfulness
+
 
 async def run_calibration():
     print("--- Running Judge Faithfulness Calibration Check ---")
@@ -16,7 +18,7 @@ async def run_calibration():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     set_path = os.path.join(base_dir, "calibration", "annotated_set.json")
     
-    with open(set_path, "r", encoding="utf-8") as f:
+    with open(set_path, encoding="utf-8") as f:
         annotated_set = json.load(f)
         
     print(f"Loaded {len(annotated_set)} annotated calibration examples.")

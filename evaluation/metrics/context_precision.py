@@ -1,15 +1,14 @@
 import asyncio
 import logging
 import re
-from typing import List
 
-from backend.providers.client import NeuroFlowClient
 from backend.providers.base import ChatMessage
+from backend.providers.client import NeuroFlowClient
 from backend.providers.router import RoutingCriteria
 
 logger = logging.getLogger("metric-precision")
 
-async def evaluate_context_precision(query: str, chunks: List[str], answer: str) -> float:
+async def evaluate_context_precision(query: str, chunks: list[str], answer: str) -> float:
     """
     Evaluates context precision: were the retrieved chunks actually relevant and useful,
     and were the most useful ones ranked higher?

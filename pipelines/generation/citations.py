@@ -1,7 +1,7 @@
 import re
 import uuid
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 # Since pipelines.retrieval.retriever is needed for annotations,
 # we use string-forward references in our annotations to avoid circular imports.
@@ -14,10 +14,10 @@ class Citation:
     reference: str            # e.g., "Source 1"
     chunk_id: uuid.UUID       # Database UUID of the chunk
     document_name: str        # Filename or URL
-    page_number: Optional[int] # Page number (if PDF/Docx)
+    page_number: int | None # Page number (if PDF/Docx)
     content_preview: str      # First 100 characters of the cited chunk content
 
-def parse_citations(generation_text: str, context_chunks: List[Any]) -> List[Dict[str, Any]]:
+def parse_citations(generation_text: str, context_chunks: list[Any]) -> list[dict[str, Any]]:
     """
     Parses all '[Source N]' citation patterns from the model's generated text,
     resolves them to metadata from the retrieved chunks, and flags invalid/hallucinated ones.

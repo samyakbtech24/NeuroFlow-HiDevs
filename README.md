@@ -32,4 +32,14 @@ if __name__ == "__main__":
 
 Configuration relies entirely on environment variables which are documented in the environment file. You are required to provide a database URL and a cache URL along with an API key and security secrets. Variables for telemetry are optional. 
 
+## Mock / Offline Mode Architecture
+
+NeuroFlow was intentionally developed with a robust **Mock / Offline Mode** architecture to drastically reduce external LLM API usage and costs during local development, testing, and CI/CD runs. 
+
+When the provider API keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`) are either omitted from the `.env` file or explicitly set to the string `"mock"`, the internal `NeuroFlowClient` automatically intercepts external calls. Instead of dialing upstream providers, it yields highly accurate, offline simulated response streams and dummy embeddings. This architectural decision was truly required to enable rapid, localized hit-and-trial testing and load-testing without burning through real API credits.
+
+To transition from this development mock mode into the live production mode, simply inject valid API keys into your `.env` file. The router will instantly detect the valid keys and begin orchestrating live external inference.
+
+## Known Limitations
+
 The system has some known limitations. The chunking algorithm struggles with highly complex tables and occasionally drops semantic context across page breaks. The cross encoder reranker can introduce noticeable latency during peak traffic spikes. Next I would build a dedicated document parsing microservice to handle complex OCR workloads and introduce a dynamic routing layer to fallback to smaller faster models during high load.

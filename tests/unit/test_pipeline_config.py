@@ -1,6 +1,15 @@
 import pytest
 from pydantic import ValidationError
-from backend.models.pipeline import PipelineConfig, IngestionConfig, RetrievalConfig, GenerationConfig, ModelRoutingConfig, EvaluationConfig
+
+from backend.models.pipeline import (
+    EvaluationConfig,
+    GenerationConfig,
+    IngestionConfig,
+    ModelRoutingConfig,
+    PipelineConfig,
+    RetrievalConfig,
+)
+
 
 def test_pipeline_config_valid():
     config = PipelineConfig(

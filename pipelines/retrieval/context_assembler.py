@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import List, Dict
+
 import tiktoken
 
 from pipelines.retrieval.retriever import RetrievalResult
@@ -8,10 +8,10 @@ from pipelines.retrieval.retriever import RetrievalResult
 logger = logging.getLogger("context-assembler")
 
 def assemble_context(
-    chunks: List[RetrievalResult], 
+    chunks: list[RetrievalResult], 
     token_budget: int = 4000,
     model_name: str = "cl100k_base"
-) -> Dict:  # type: ignore
+) -> dict:  # type: ignore
     """
     Assembles the top-K reranked chunks into a structured context string,
     respecting a maximum token budget without truncating sentences in the middle.
@@ -30,9 +30,9 @@ def assemble_context(
         # Fallback if the encoder isn't found
         encoding = tiktoken.get_encoding("cl100k_base")
 
-    assembled_blocks: List[str] = []
-    chunks_used: List[str] = []
-    sources: List[str] = []
+    assembled_blocks: list[str] = []
+    chunks_used: list[str] = []
+    sources: list[str] = []
     
     current_tokens = 0
     

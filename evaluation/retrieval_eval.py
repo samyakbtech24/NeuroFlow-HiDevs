@@ -15,7 +15,7 @@ if not os.path.exists("/.dockerenv"):
     settings.postgres_host = "localhost"
     settings.redis_host = "localhost"
 
-from backend.db.pool import init_pool, close_pool, get_pool
+from backend.db.pool import close_pool, get_pool, init_pool
 from pipelines.retrieval.retriever import Retriever
 
 # Configure Logging
@@ -190,7 +190,7 @@ async def run_evaluation():
     hit_rate = hits / total_queries
     mrr = mrr_sum / total_queries
     
-    print(f"\nFinal Results:")
+    print("\nFinal Results:")
     print(f"  Hit Rate: {hit_rate:.4f} (Required > 0.75)")
     print(f"  MRR:      {mrr:.4f} (Required > 0.55)")
     

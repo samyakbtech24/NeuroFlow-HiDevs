@@ -1,6 +1,8 @@
 import asyncio
 import os
+
 from neuroflow.client import NeuroFlowClient
+
 
 async def main():
     print("Initializing NeuroFlow SDK...")

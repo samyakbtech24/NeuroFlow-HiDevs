@@ -1,5 +1,6 @@
 import os
-from locust import HttpUser, task, between, events
+
+from locust import HttpUser, between, events, task
 
 ADMIN_TOKEN = None
 

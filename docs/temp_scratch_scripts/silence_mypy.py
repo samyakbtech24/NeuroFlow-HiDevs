@@ -1,8 +1,9 @@
-import sys
 import os
+import sys
+
 
 def silence_errors(log_file):
-    with open(log_file, "r", encoding="utf-8") as f:
+    with open(log_file, encoding="utf-8") as f:
         lines = f.readlines()
         
     for line in lines:
@@ -15,7 +16,7 @@ def silence_errors(log_file):
                     if not os.path.exists(filename):
                         continue
                         
-                    with open(filename, "r", encoding="utf-8") as py_file:
+                    with open(filename, encoding="utf-8") as py_file:
                         code = py_file.readlines()
                         
                     if lineno <= len(code):

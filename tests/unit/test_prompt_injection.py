@@ -1,5 +1,5 @@
-import pytest
 from backend.security.prompt_injection import scan_patterns
+
 
 def test_scanner_clean_text():
     is_injected, pattern = scan_patterns("This is a clean and safe user prompt.")

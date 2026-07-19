@@ -1,5 +1,6 @@
-from typing import List
+
 from backend.providers.base import ChatMessage
+
 
 class PromptBuilder:
     """
@@ -7,7 +8,7 @@ class PromptBuilder:
     Adapts instructions based on the query classification (factual, analytical, comparative, procedural).
     """
 
-    def build_prompt(self, query: str, context: str, query_type: str = "factual") -> List[ChatMessage]:
+    def build_prompt(self, query: str, context: str, query_type: str = "factual") -> list[ChatMessage]:
         # 1. Base system prompt instructions enforcing strict grounding and source referencing
         system_content = (
             "You are a precise research assistant. Answer the user's question using ONLY the provided context.\n"

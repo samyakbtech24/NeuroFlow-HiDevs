@@ -1,5 +1,6 @@
+
 from pydantic import BaseModel
-from typing import List, Dict
+
 
 class Document(BaseModel):
     id: str
@@ -7,7 +8,7 @@ class Document(BaseModel):
 
 class QueryResult(BaseModel):
     answer: str
-    sources: List[Dict]
+    sources: list[dict]
 
 class EvaluationResult(BaseModel):
-    scores: Dict[str, float]
+    scores: dict[str, float]

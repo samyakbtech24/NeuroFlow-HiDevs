@@ -1,6 +1,6 @@
-import pytest
-from pipelines.retrieval.retriever import RetrievalResult
 from pipelines.retrieval.fusion import reciprocal_rank_fusion
+from pipelines.retrieval.retriever import RetrievalResult
+
 
 def test_rrf_empty_lists():
     results = reciprocal_rank_fusion([])

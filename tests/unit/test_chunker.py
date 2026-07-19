@@ -1,6 +1,8 @@
 import pytest
+
 from pipelines.ingestion.chunker import chunk_document
 from pipelines.ingestion.extractors.extracted_page import ExtractedPage
+
 
 @pytest.mark.asyncio
 async def test_chunker_empty_document():

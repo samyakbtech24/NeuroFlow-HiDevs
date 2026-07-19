@@ -1,6 +1,6 @@
 import io
 import logging
-from typing import List
+
 import pandas as pd
 
 from pipelines.ingestion.extractors.extracted_page import ExtractedPage
@@ -33,7 +33,7 @@ def _df_to_markdown_table(df: pd.DataFrame) -> str:
         
     return "\n".join(lines)
 
-def extract_csv(file_bytes: bytes) -> List[ExtractedPage]:
+def extract_csv(file_bytes: bytes) -> list[ExtractedPage]:
     """
     Extracts structured content from CSV bytes.
     - Uses pandas to parse the CSV.

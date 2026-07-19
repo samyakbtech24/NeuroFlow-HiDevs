@@ -1,10 +1,9 @@
 import json
 import logging
 import re
-from typing import List, Dict
 
-from backend.providers.client import NeuroFlowClient
 from backend.providers.base import ChatMessage
+from backend.providers.client import NeuroFlowClient
 from backend.providers.router import RoutingCriteria
 
 logger = logging.getLogger("query-processor")
@@ -15,7 +14,7 @@ class QueryProcessor:
     Performs query expansion, metadata filter extraction, and query type classification.
     """
     
-    async def expand_query(self, query: str) -> List[str]:
+    async def expand_query(self, query: str) -> list[str]:
         """
         Generates 2-3 alternative phrasings of the query to improve dense retrieval recall.
         """
@@ -49,7 +48,7 @@ class QueryProcessor:
             
         return [f"{query} details", f"{query} concepts"]
 
-    async def extract_filters(self, query: str) -> Dict:  # type: ignore
+    async def extract_filters(self, query: str) -> dict:  # type: ignore
         """
         Detects implicit year and topic filters in the query text.
         Returns a dictionary of filters (e.g. {"year": 2023, "topic": "climate"}).

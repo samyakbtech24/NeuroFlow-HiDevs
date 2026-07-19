@@ -2,10 +2,9 @@ import asyncio
 import json
 import logging
 import re
-from typing import List
 
-from backend.providers.client import NeuroFlowClient
 from backend.providers.base import ChatMessage
+from backend.providers.client import NeuroFlowClient
 from backend.providers.router import RoutingCriteria
 
 logger = logging.getLogger("metric-faithfulness")

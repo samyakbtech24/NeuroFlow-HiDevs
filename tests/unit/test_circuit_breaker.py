@@ -1,6 +1,9 @@
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from backend.resilience.circuit_breaker import CircuitBreaker, CircuitOpenError
+
 
 @pytest.fixture
 def mock_redis():

@@ -1,8 +1,8 @@
-import re
 import json
-import uuid
 import os
-from typing import List, Dict, Any
+import re
+import uuid
+
 from backend.db.pool import get_pool
 
 # Basic regex to catch emails and phone numbers

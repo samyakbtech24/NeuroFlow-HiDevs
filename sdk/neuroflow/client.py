@@ -1,7 +1,8 @@
-import httpx
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import AsyncGenerator, Union
-from .models import Document, QueryResult, EvaluationResult
+
+from .models import Document, EvaluationResult, QueryResult
+
 
 class NeuroFlowClient:
     def __init__(self, base_url: str, api_key: str):
@@ -9,7 +10,7 @@ class NeuroFlowClient:
         self.api_key = api_key
         self.headers = {"Authorization": f"Bearer {api_key}"}
         
-    async def ingest_file(self, file_path: Union[str, Path], pipeline_id: str = None) -> Document:
+    async def ingest_file(self, file_path: str | Path, pipeline_id: str = None) -> Document:
         """Upload and ingest a file. Waits for ingestion to complete."""
         # Simulated implementation mapping API
         return Document(id="doc-123", status="complete")
@@ -18,7 +19,7 @@ class NeuroFlowClient:
         """Ingest a URL. Waits for ingestion to complete."""
         return Document(id="doc-456", status="complete")
 
-    async def query(self, query: str, pipeline_id: str, stream: bool = False) -> Union[QueryResult, AsyncGenerator]:
+    async def query(self, query: str, pipeline_id: str, stream: bool = False) -> QueryResult | AsyncGenerator:
         """Run a RAG query. If stream=True, returns an async generator of tokens."""
         if stream:
             async def mock_stream():

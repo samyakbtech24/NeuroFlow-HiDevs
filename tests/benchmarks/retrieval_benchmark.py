@@ -1,5 +1,6 @@
 import os
 
+
 def generate_report():
     """
     Offline script to calculate Hit Rate and MRR metrics across retrieval strategies.

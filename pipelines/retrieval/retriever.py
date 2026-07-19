@@ -1,18 +1,16 @@
 import asyncio
+import contextlib
 import json
 import logging
 import time
-import contextlib
 from dataclasses import dataclass
-from typing import List, Dict, Optional
-import uuid
 
 from backend.db.pool import get_pool
-from backend.providers.client import NeuroFlowClient
-from pipelines.retrieval.query_processor import QueryProcessor
-from pipelines.retrieval.fusion import reciprocal_rank_fusion
-from pipelines.retrieval.reranker import CrossEncoderReranker
 from backend.monitoring.metrics import retrieval_latency
+from backend.providers.client import NeuroFlowClient
+from pipelines.retrieval.fusion import reciprocal_rank_fusion
+from pipelines.retrieval.query_processor import QueryProcessor
+from pipelines.retrieval.reranker import CrossEncoderReranker
 
 logger = logging.getLogger("retriever")
 
@@ -31,7 +29,7 @@ class RetrievalResult:
     document_id: str
     content: str
     score: float
-    metadata: Dict  # type: ignore
+    metadata: dict  # type: ignore
 
 class Retriever:
     """
@@ -44,7 +42,7 @@ class Retriever:
         self.processor = QueryProcessor()
         self.reranker = CrossEncoderReranker()
 
-    async def _dense_retrieval(self, query: str, expansions: List[str], k: int) -> List[RetrievalResult]:
+    async def _dense_retrieval(self, query: str, expansions: list[str], k: int) -> list[RetrievalResult]:
         ctx = tracer.start_as_current_span("retrieval.dense") if tracer else contextlib.nullcontext()
         with ctx:
             client = NeuroFlowClient()
@@ -59,7 +57,7 @@ class Retriever:
                 return []
 
             tasks = []
-            async def run_vector_search(vector: List[float]):  # type: ignore
+            async def run_vector_search(vector: list[float]):  # type: ignore
                 vector_str = str(vector)
                 async with pool.acquire() as conn:
                     rows = await conn.fetch(
@@ -98,7 +96,7 @@ class Retriever:
             sorted_results = sorted(merged_chunks.values(), key=lambda x: x["score"], reverse=True)[:k]
             return [RetrievalResult(**r) for r in sorted_results]
 
-    async def _sparse_retrieval(self, query: str, k: int) -> List[RetrievalResult]:
+    async def _sparse_retrieval(self, query: str, k: int) -> list[RetrievalResult]:
         ctx = tracer.start_as_current_span("retrieval.sparse") if tracer else contextlib.nullcontext()
         with ctx:
             import re
@@ -136,7 +134,7 @@ class Retriever:
                 logger.error(f"FTS sparse retrieval failed: {e}")
                 return []
 
-    async def _metadata_retrieval(self, filters: Dict, query: str, k: int) -> List[RetrievalResult]:  # type: ignore
+    async def _metadata_retrieval(self, filters: dict, query: str, k: int) -> list[RetrievalResult]:  # type: ignore
         ctx = tracer.start_as_current_span("retrieval.metadata") if tracer else contextlib.nullcontext()
         with ctx:
             if not filters:
@@ -178,7 +176,7 @@ class Retriever:
                 logger.error(f"Metadata filtered retrieval failed: {e}")
                 return []
 
-    async def retrieve(self, query: str, k: int = 20) -> List[RetrievalResult]:
+    async def retrieve(self, query: str, k: int = 20) -> list[RetrievalResult]:
         start_time = time.time()
         parent_ctx = tracer.start_as_current_span("retrieval.pipeline") if tracer else contextlib.nullcontext()
         with parent_ctx as parent_span:

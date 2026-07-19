@@ -1,11 +1,11 @@
+import logging
 import re
 import uuid
-import logging
-from typing import List, Dict, Optional
+
 import tiktoken
 
-from pipelines.ingestion.extractors.extracted_page import ExtractedPage
 from backend.providers.client import NeuroFlowClient
+from pipelines.ingestion.extractors.extracted_page import ExtractedPage
 
 logger = logging.getLogger("chunker")
 
@@ -15,14 +15,14 @@ ENCODING = tiktoken.get_encoding("cl100k_base")
 def count_tokens(text: str) -> int:
     return len(ENCODING.encode(text))
 
-def split_into_sentences(text: str) -> List[str]:
+def split_into_sentences(text: str) -> list[str]:
     """
     Splits text into sentences based on punctuation, preserving sentence endings.
     """
     sentence_endings = re.compile(r'(?<=[.!?])\s+')
     return [s.strip() for s in sentence_endings.split(text) if s.strip()]
 
-def cosine_similarity(v1: List[float], v2: List[float]) -> float:
+def cosine_similarity(v1: list[float], v2: list[float]) -> float:
     """
     Computes cosine similarity between two vector lists.
     """
@@ -33,7 +33,7 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
         return 0.0
     return dot_product / (magnitude1 * magnitude2)  # type: ignore
 
-def chunk_fixed_size(text: str, max_tokens: int = 512, overlap_tokens: int = 64) -> List[Dict]:  # type: ignore
+def chunk_fixed_size(text: str, max_tokens: int = 512, overlap_tokens: int = 64) -> list[dict]:  # type: ignore
     """
     Splits text into chunks of max_tokens size, with sentence boundaries respected.
     Ensures sentence breaks occur within 10% of the target size, avoiding mid-sentence cuts.
@@ -95,7 +95,7 @@ def chunk_fixed_size(text: str, max_tokens: int = 512, overlap_tokens: int = 64)
         
     return chunks
 
-async def chunk_semantic(text: str, similarity_threshold: float = 0.7, max_chunk_tokens: int = 512) -> List[Dict]:  # type: ignore
+async def chunk_semantic(text: str, similarity_threshold: float = 0.7, max_chunk_tokens: int = 512) -> list[dict]:  # type: ignore
     """
     Splits text by identifying topic shifts.
     Embeds each sentence and splits where adjacent sentence similarity drops below 0.7.
@@ -145,7 +145,7 @@ async def chunk_semantic(text: str, similarity_threshold: float = 0.7, max_chunk
         
     return chunks
 
-def chunk_hierarchical(pages: List[ExtractedPage]) -> List[Dict]:  # type: ignore
+def chunk_hierarchical(pages: list[ExtractedPage]) -> list[dict]:  # type: ignore
     """
     Creates chunks with parent-child section nesting.
     Top-level heading pages (e.g. h1 level) are treated as parent chunks,
@@ -183,7 +183,7 @@ def chunk_hierarchical(pages: List[ExtractedPage]) -> List[Dict]:  # type: ignor
         
     return chunks
 
-async def chunk_document(pages: List[ExtractedPage], document_metadata: Dict) -> List[Dict]:  # type: ignore
+async def chunk_document(pages: list[ExtractedPage], document_metadata: dict) -> list[dict]:  # type: ignore
     """
     Selects chunking strategy automatically:
     - If all pages are tables -> fixed_size.

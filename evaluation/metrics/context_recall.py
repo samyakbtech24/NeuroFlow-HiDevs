@@ -1,15 +1,14 @@
 import asyncio
 import logging
 import re
-from typing import List
 
-from backend.providers.client import NeuroFlowClient
 from backend.providers.base import ChatMessage
+from backend.providers.client import NeuroFlowClient
 from backend.providers.router import RoutingCriteria
 
 logger = logging.getLogger("metric-recall")
 
-async def evaluate_context_recall(query: str, chunks: List[str], answer: str) -> float:
+async def evaluate_context_recall(query: str, chunks: list[str], answer: str) -> float:
     """
     Evaluates context recall: were the relevant sources retrieved to cover the generated answer?
     Returns a score between 0.0 and 1.0.

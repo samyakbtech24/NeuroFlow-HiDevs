@@ -1,7 +1,7 @@
 import logging
-from typing import List, Optional
 from urllib.parse import urlparse
 from urllib.robotparser import RobotFileParser
+
 import httpx
 import trafilatura
 
@@ -31,7 +31,7 @@ async def can_fetch(url: str, user_agent: str = "*") -> bool:
         logger.warning(f"Error checking robots.txt rules for {url}: {e}. Defaulting to allowed.")
         return True
 
-async def extract_url(url: str) -> List[ExtractedPage]:
+async def extract_url(url: str) -> list[ExtractedPage]:
     """
     Downloads webpage HTML asynchronously and extracts clean text, tables, and metadata.
     - Respects robots.txt rules.

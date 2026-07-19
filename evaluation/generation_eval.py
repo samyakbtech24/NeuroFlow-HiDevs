@@ -1,7 +1,7 @@
-import logging
-import time
 import json
+import logging
 import os
+import time
 
 logger = logging.getLogger("generation_eval")
 
@@ -15,7 +15,7 @@ def run_evaluation() -> None:
     # Load and print the final metrics to simulate successful evaluation run
     filepath = os.path.join(os.path.dirname(__file__), "quality_final.json")
     if os.path.exists(filepath):
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             data = json.load(f)
             logger.info(f"Evaluation complete. Final Metrics: {json.dumps(data, indent=2)}")
     else:

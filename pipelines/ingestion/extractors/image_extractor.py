@@ -1,17 +1,17 @@
 import io
 import logging
-from typing import List
-from PIL import Image
-import pytesseract
 
-from pipelines.ingestion.extractors.extracted_page import ExtractedPage
-from backend.providers.client import NeuroFlowClient
+import pytesseract
+from PIL import Image
+
 from backend.providers.base import ChatMessage
+from backend.providers.client import NeuroFlowClient
 from backend.providers.router import RoutingCriteria
+from pipelines.ingestion.extractors.extracted_page import ExtractedPage
 
 logger = logging.getLogger("image-extractor")
 
-async def extract_image(file_bytes: bytes, filename: str = "image.png") -> List[ExtractedPage]:
+async def extract_image(file_bytes: bytes, filename: str = "image.png") -> list[ExtractedPage]:
     """
     Extracts content from image bytes.
     1. Loads the image and resizes it to max 1024px on the longest side.

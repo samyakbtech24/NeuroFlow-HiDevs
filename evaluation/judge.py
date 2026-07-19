@@ -1,20 +1,16 @@
 import asyncio
+import contextlib
 import json
 import logging
 import uuid
-import contextlib
 
 from backend.db.pool import get_pool
-from pipelines.retrieval.retriever import Retriever
-from pipelines.retrieval.context_assembler import assemble_context
-from pipelines.generation.prompt_builder import PromptBuilder
-
-from evaluation.metrics.faithfulness import evaluate_faithfulness
+from backend.monitoring.metrics import eval_faithfulness, eval_overall
 from evaluation.metrics.answer_relevance import evaluate_answer_relevance
 from evaluation.metrics.context_precision import evaluate_context_precision
 from evaluation.metrics.context_recall import evaluate_context_recall
-
-from backend.monitoring.metrics import eval_faithfulness, eval_overall
+from evaluation.metrics.faithfulness import evaluate_faithfulness
+from pipelines.generation.prompt_builder import PromptBuilder
 
 logger = logging.getLogger("eval-judge")
 

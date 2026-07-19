@@ -45,7 +45,10 @@ class NeuroFlowClient:
         self.redis_url = redis_url or settings.redis_url
         self.router = ModelRouter(self.redis_url)
         
-        # Load API keys from environment variables (fallback to "mock" for free runs)
+        # We intentionally default to 'mock' mode here if the live API keys are missing.
+        # This architectural decision drastically reduces unnecessary external API usage and 
+        # costs during local development, CI/CD testing, and load testing. 
+        # To deploy to live production, simply inject the required keys into the .env file.
         self.openai_key = os.getenv("OPENAI_API_KEY", "mock")
         self.anthropic_key = os.getenv("ANTHROPIC_API_KEY", "mock")
         self.gemini_key = os.getenv("GEMINI_API_KEY", "mock")

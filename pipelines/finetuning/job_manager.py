@@ -1,9 +1,12 @@
 import asyncio
-import uuid
 import json
+import uuid
+
 import redis.asyncio as aioredis
-from backend.db.pool import get_pool
+
 from backend.config import settings
+from backend.db.pool import get_pool
+
 
 async def mock_submit_and_poll_job(job_id: uuid.UUID, base_model: str, mlflow_run_id: str):  # type: ignore
     """

@@ -206,7 +206,7 @@ async def process_ingestion_task(task_payload: dict) -> None:  # type: ignore
                 "chunks": chunk_count,
                 "tokens": total_tokens
             }
-            print(json.dumps(log_json))
+            logger.info("Structured Ingestion Metrics: " + json.dumps(log_json))
             
             # Record Prometheus metric
             ingestion_docs_total.labels(source_type=source_type).inc()

@@ -1,9 +1,9 @@
-from typing import List, Dict
+
 
 def reciprocal_rank_fusion(
-    result_lists: List[List],  # type: ignore
+    result_lists: list[list],  # type: ignore
     k: int = 60
-) -> List:  # type: ignore
+) -> list:  # type: ignore
     """
     Applies Reciprocal Rank Fusion (RRF) to combine multiple ranked lists of chunks.
     Formula: score(d) = sum( 1 / (k + rank_m(d)) ) across all lists m where d appears.
@@ -11,8 +11,8 @@ def reciprocal_rank_fusion(
     """
     from pipelines.retrieval.retriever import RetrievalResult
     
-    rrf_scores: Dict[str, float] = {}  # Map of chunk_id -> RRF score
-    chunk_data: Dict[str, RetrievalResult] = {}  # Map of chunk_id -> RetrievalResult template
+    rrf_scores: dict[str, float] = {}  # Map of chunk_id -> RRF score
+    chunk_data: dict[str, RetrievalResult] = {}  # Map of chunk_id -> RetrievalResult template
 
     for r_list in result_lists:
         # Each list is sorted descending by its own search score,

@@ -1,10 +1,9 @@
 import asyncio
 import logging
 import re
-from typing import List
 
-from backend.providers.client import NeuroFlowClient
 from backend.providers.base import ChatMessage
+from backend.providers.client import NeuroFlowClient
 from backend.providers.router import RoutingCriteria
 
 logger = logging.getLogger("reranker")
@@ -64,7 +63,7 @@ class CrossEncoderReranker:
             
         return 0.0
 
-    async def rerank(self, query: str, chunks: List["RetrievalResult"]) -> List["RetrievalResult"]:  # type: ignore
+    async def rerank(self, query: str, chunks: list["RetrievalResult"]) -> list["RetrievalResult"]:  # type: ignore
         """
         Scores all candidate chunks in parallel and sorts them descending by score.
         """

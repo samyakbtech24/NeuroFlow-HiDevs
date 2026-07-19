@@ -1,21 +1,22 @@
 import asyncio
+import contextlib
 import json
 import logging
 import time
-import contextlib
-from typing import AsyncGenerator, List, Dict, Any
 import uuid
-import tiktoken
+from collections.abc import AsyncGenerator
+from typing import Any
+
 import redis.asyncio as aioredis
+import tiktoken
 
 from backend.config import settings
 from backend.db.pool import get_pool
+from backend.monitoring.metrics import generation_latency, llm_cost, lm_calls_total
 from backend.providers.client import NeuroFlowClient
 from backend.providers.router import RoutingCriteria
-from pipelines.generation.prompt_builder import PromptBuilder
 from pipelines.generation.citations import parse_citations
-
-from backend.monitoring.metrics import generation_latency, llm_cost, lm_calls_total
+from pipelines.generation.prompt_builder import PromptBuilder
 
 logger = logging.getLogger("rag-generator")
 
@@ -58,8 +59,8 @@ class RAGGenerator:
         query_type: str,
         run_id: uuid.UUID,
         pipeline_id: uuid.UUID,
-        context_chunks: List[Any]
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+        context_chunks: list[Any]
+    ) -> AsyncGenerator[dict[str, Any], None]:
         
         start_time = time.time()
         parent_ctx = tracer.start_as_current_span("generation.pipeline") if tracer else contextlib.nullcontext()

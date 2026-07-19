@@ -1,16 +1,15 @@
 import io
 import logging
-from typing import List
-import pypdfium2 as pdfium
+
 import pdfplumber
+import pypdfium2 as pdfium
 import pytesseract
-from PIL import Image
 
 from pipelines.ingestion.extractors.extracted_page import ExtractedPage
 
 logger = logging.getLogger("pdf-extractor")
 
-def list_to_markdown_table(table: List[List[str]]) -> str:
+def list_to_markdown_table(table: list[list[str]]) -> str:
     """
     Helper function to convert a 2D list of cells into a clean Markdown table.
     """
@@ -40,7 +39,7 @@ def list_to_markdown_table(table: List[List[str]]) -> str:
         
     return "\n".join(lines)
 
-def extract_pdf(file_bytes: bytes) -> List[ExtractedPage]:
+def extract_pdf(file_bytes: bytes) -> list[ExtractedPage]:
     """
     Extracts text and tables from PDF bytes page-by-page.
     - Uses pypdfium2 for fast digital text extraction.

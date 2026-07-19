@@ -1,17 +1,15 @@
-import asyncio
 import json
 import logging
 import math
 import re
-from typing import List
 
-from backend.providers.client import NeuroFlowClient
 from backend.providers.base import ChatMessage
+from backend.providers.client import NeuroFlowClient
 from backend.providers.router import RoutingCriteria
 
 logger = logging.getLogger("metric-relevance")
 
-def cosine_similarity(v1: List[float], v2: List[float]) -> float:
+def cosine_similarity(v1: list[float], v2: list[float]) -> float:
     """
     Computes the cosine similarity between two float vectors.
     """
